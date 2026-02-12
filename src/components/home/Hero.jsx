@@ -1,97 +1,94 @@
 import React from 'react'
 import Link from 'next/link'
-import { Leaf, ShoppingBag, ArrowRight } from 'lucide-react'
+import Image from 'next/image'
+import { Leaf, ArrowRight, Apple, Carrot, Sprout } from 'lucide-react'
 
 const Hero = () => {
   return (
-    <>
-      <section className='relative bg-[url("/images/hero.png")] bg-cover bg-center bg-no-repeat min-h-150 md:min-h-175'>
-        <div className='absolute inset-0 bg-linear-to-r from-black/60 via-black/50 to-transparent'></div>
-        
-        <div className='relative container mx-auto px-4 h-full min-h-150 md:min-h-175 flex items-center'>
-          <div className='max-w-2xl text-white py-20'>
+    <section className='relative overflow-hidden'>
+      <div className='absolute inset-0 pointer-events-none opacity-20'>
+        <Leaf className='absolute top-20 left-10 w-16 h-16 lg:w-24 lg:h-24 text-green-600 rotate-45 animate-pulse' />
+        <Apple className='absolute top-40 left-32 w-12 h-12 lg:w-16 lg:h-16 text-green-600 -rotate-12' />
+        <Carrot className='absolute bottom-32 left-20 w-16 h-16 lg:w-20 lg:h-20 text-orange-600 rotate-12' />
+        <Sprout className='absolute top-1/2 left-1/4 w-20 h-20 lg:w-28 lg:h-28 text-green-300 -rotate-45' />
+        <Leaf className='absolute bottom-20 left-1/3 w-16 h-16 lg:w-20 lg:h-20 text-green-600 rotate-90' />
+      </div>
+
+      <div className='absolute inset-0 bg-linear-to-br from-green-50/30 via-transparent to-green-100/20 pointer-events-none' />
+      
+      <div className='relative container mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16 lg:py-20'>
+        <div className='flex flex-col lg:flex-row items-center gap-8 lg:gap-12'>
+          
+          <div className='w-full lg:w-1/2 z-10 text-center lg:text-left'>
+
             <div className='inline-flex items-center gap-2 bg-green-500/20 backdrop-blur-sm border border-green-400/30 rounded-full px-4 py-2 mb-6'>
-              <Leaf className='w-4 h-4 text-green-400' />
-              <span className='text-sm font-medium text-green-300'>100% Organic & Natural</span>
+              <Leaf className='w-4 h-4 text-green-700' />
+              <span className='text-sm font-medium text-green-700'>100% Organic & Natural</span>
             </div>
 
-            <h1 className='text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight'>
+            <h1 className='text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight text-gray-900'>
               Environment Friendly
-              <span className='block text-green-400 mt-2'>Organic Farm</span>
+              <span className='block text-green-600 mt-2'>Organic Farm</span>
             </h1>
 
-            <p className='text-lg md:text-xl text-gray-200 mb-8 leading-relaxed'>
-              Discover fresh, pesticide-free produce grown with care for you and the planet. 
+            <p className='text-base sm:text-lg md:text-lg lg:text-xl text-gray-700 mb-8 leading-relaxed max-w-xl mx-auto lg:mx-0'>
+              Discover fresh, pesticide-free produce grown with care for you and the planet.
               Experience the difference of truly organic farming.
             </p>
 
-            <div className='grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10'>
-              <div className='flex items-center gap-3'>
-                <div className='w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center'>
-                  <span className='text-2xl'>🌱</span>
-                </div>
-                <div>
-                  <p className='font-semibold'>100% Organic</p>
-                  <p className='text-sm text-gray-300'>No Chemicals</p>
-                </div>
-              </div>
-              <div className='flex items-center gap-3'>
-                <div className='w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center'>
-                  <span className='text-2xl'>🚚</span>
-                </div>
-                <div>
-                  <p className='font-semibold'>Fast Delivery</p>
-                  <p className='text-sm text-gray-300'>Same Day</p>
-                </div>
-              </div>
-              <div className='flex items-center gap-3'>
-                <div className='w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center'>
-                  <span className='text-2xl'>✓</span>
-                </div>
-                <div>
-                  <p className='font-semibold'>Certified</p>
-                  <p className='text-sm text-gray-300'>USDA Organic</p>
-                </div>
-              </div>
-            </div>
-
-            <div className='flex flex-col sm:flex-row gap-4'>
-              <Link 
+            <div className='flex flex-col sm:flex-row gap-4 justify-center lg:justify-start md:w-3/4 w-1/2 m-auto lg:w-full'>
+              <Link
                 href="/shop"
-                className='inline-flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white px-8 py-4 rounded-full font-semibold text-lg transition-all shadow-lg hover:shadow-xl hover:scale-105'
+                className='inline-flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-full font-semibold text-base sm:text-lg transition-all shadow-lg hover:shadow-xl hover:scale-105'
               >
-                <ShoppingBag className='w-5 h-5' />
                 Shop Now
                 <ArrowRight className='w-5 h-5' />
               </Link>
-              
-              <Link 
+
+              <Link
                 href="/about"
-                className='inline-flex items-center justify-center gap-2 bg-white/10 backdrop-blur-sm hover:bg-white/20 text-white border-2 border-white/30 px-8 py-4 rounded-full font-semibold text-lg transition-all'
+                className='inline-flex items-center justify-center gap-2 bg-white hover:bg-gray-50 text-gray-900 border-2 border-gray-300 px-6 sm:px-8 py-3 sm:py-4 rounded-full font-semibold text-base sm:text-lg transition-all '
               >
                 Learn More
               </Link>
             </div>
+          </div>
+          
+          <div className='relative w-full lg:w-1/2 flex items-center justify-center min-h-100 sm:min-h-125 lg:min-h-150'>
+            <div className='relative w-full h-full max-w-md lg:max-w-full'>
+              <div className='relative w-full h-full min-h-100 sm:min-h-125 lg:min-h-150'>
+                <Image
+                  src="/images/veges.png"
+                  alt='Fresh organic vegetables'
+                  fill
+                  className='object-contain'
+                  priority
+                />
+              </div>
 
-            <div className='flex flex-wrap gap-8 mt-12 pt-8 border-t border-white/20'>
-              <div>
-                <p className='text-3xl font-bold text-green-400'>500+</p>
-                <p className='text-sm text-gray-300'>Products</p>
+              <div className='hidden lg:block absolute top-0 left-0 lg:-top-4 lg:-left-4 w-24 h-24 sm:w-32 sm:h-32 lg:w-40 lg:h-40 xl:w-48 xl:h-48 z-10'>
+                <Image
+                  src="/images/leaves.png"
+                  alt='decorative leaves'
+                  fill
+                  className='object-contain'
+                />
               </div>
-              <div>
-                <p className='text-3xl font-bold text-green-400'>10K+</p>
-                <p className='text-sm text-gray-300'>Happy Customers</p>
-              </div>
-              <div>
-                <p className='text-3xl font-bold text-green-400'>15+</p>
-                <p className='text-sm text-gray-300'>Years Experience</p>
+
+              <div className='hidden lg:block absolute lg:-bottom-14 lg:-right-10 w-24 h-24 sm:w-32 sm:h-32 lg:w-40 lg:h-40 xl:w-48 xl:h-48 z-10'>
+                <Image
+                  src="/images/leaves.png"
+                  alt='decorative leaves'
+                  fill
+                  className='object-contain'
+                />
               </div>
             </div>
           </div>
-        </div>
 
-      </section>
-    </>
+        </div>
+      </div>
+    </section>
   )
 }
 
