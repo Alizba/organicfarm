@@ -1,3 +1,5 @@
+import Cards from "@/components/home/Cards";
+import Cta from "@/components/home/Cta";
 import Hero from "@/components/home/Hero";
 
 export default async function Home() {
@@ -12,6 +14,8 @@ export default async function Home() {
   return (
     <>
     <Hero/>  
+    <Cards/>
+
     </>
   );
 }
