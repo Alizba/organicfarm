@@ -1,6 +1,7 @@
 import Cards from "@/components/home/Cards";
 import Cta from "@/components/home/Cta";
 import Hero from "@/components/home/Hero";
+import Button from "@/components/ui/Button";
 
 export default async function Home() {
 
@@ -15,6 +16,7 @@ export default async function Home() {
     <>
     <Hero/>  
     <Cards/>
+    <Cta/>
 
     </>
   );
