@@ -1,7 +1,8 @@
 import Cards from "@/components/home/Cards";
 import Cta from "@/components/home/Cta";
 import Hero from "@/components/home/Hero";
-import CategorySlider from "@/components/home/CategorySlider"
+import Category from "@/components/home/Category";
+import Offers from "@/components/home/Offers";
 
 export default async function Home() {
 
@@ -17,6 +18,8 @@ export default async function Home() {
     <Hero/>  
     <Cards/>
     <Cta/>
+    <Category/>
+    <Offers/>
     </>
   );
 }

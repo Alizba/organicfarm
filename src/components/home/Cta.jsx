@@ -15,7 +15,7 @@ const Cta = () => {
                 <div className='relative group'>
                     <div className='absolute -inset-4 shadow-2xl rounded-full opacity-20 blur-2xl group-hover:opacity-30 transition-opacity duration-500'></div>
                     <Image
-                        src="/images/cta.png"
+                        src="/images/flashVeges.png"
                         alt='Fresh organic vegetables'
                         width={550}
                         height={550}
