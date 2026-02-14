@@ -69,7 +69,7 @@ const Cta = () => {
                                 <PhoneCall className='w-5 h-5 text-emerald-600' strokeWidth={2} />
                             </div>
                             <div>
-                                <p className='text-xs text-gray-500 font-medium'>Call us Anytime</p>
+                                <p className='text-lg text-gray-500 font-medium'>Call us Anytime</p>
                                 <p className='text-lg font-bold text-gray-900 transition-colors'>
                                     +92 344 6593349
                                 </p>
