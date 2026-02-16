@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { ShoppingBag, ShoppingCart } from "lucide-react";
+import { ShoppingCart } from "lucide-react";
 import Button from "@/components/ui/Button";
 
 export default function ProductCard({ product }) {

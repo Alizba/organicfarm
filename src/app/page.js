@@ -1,7 +1,7 @@
 import Cards from "@/components/home/Cards";
 import Cta from "@/components/home/Cta";
 import Hero from "@/components/home/Hero";
-import Category from "@/components/home/Category/Category";
+import Category from "@/components/home/category/Category";
 import Offers from "@/components/home/Offers";
 import Product from "@/components/home/products/Product";
 
