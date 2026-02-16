@@ -1,7 +1,7 @@
 import React from 'react'
 import CategorySlider from './CategorySlider'
 import { ShoppingBag } from 'lucide-react'
-import Button from '../ui/Button'
+import Button from '../../ui/Button.jsx'
 
 const Category = () => {
     return (

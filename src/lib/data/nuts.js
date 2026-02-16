@@ -1,47 +1,110 @@
-[
+ export const nuts = [
   {
-    "id": 1,
-    "name": "Almond",
-    "image": "/images/nuts/almond.png"
+    id: 1,
+    name: "Almond",
+    image: "/images/nuts/almond.png",
+    category : "nuts",
+    weight : "0.5kg",
+    price : 300,
+    originalPrice: 350,
+    isVegetarian : true,
+    instock: true,
+    description: "Best premium quality Apples."
   },
   {
-    "id": 2,
-    "name": "Coffee",
-    "image": "/images/nuts/coffee.png"
+    id: 2,
+    name: "Coffee",
+    image: "/images/nuts/coffee.png",
+    category : "nuts",
+    weight : "0.5kg",
+    price : 300,
+    originalPrice: 350,
+    isVegetarian : true,
+    instock: true,
+    description: "Best premium quality Apples."
   },
   {
-    "id": 3,
-    "name": "Hazelnut",
-    "image": "/images/nuts/Hazelnut.png"
+    id: 3,
+    name: "Hazelnut",
+    image: "/images/nuts/Hazelnut.png",
+    category : "nuts",
+    weight : "0.5kg",
+    price : 300,
+    originalPrice: 350,
+    isVegetarian : true,
+    instock: true,
+    description: "Best premium quality Apples."
   },
   {
-    "id": 4,
-    "name": "Kajo",
-    "image": "/images/nuts/Kajo.png"
+    id: 4,
+    name: "Kajo",
+    image: "/images/nuts/Kajo.png",
+    category : "nuts",
+    weight : "0.5kg",
+    price : 300,
+    originalPrice: 350,
+    isVegetarian : true,
+    instock: true,
+    description: "Best premium quality Apples."
   },
   {
-    "id": 5,
-    "name": "Maywa",
-    "image": "/images/nuts/Maywa.png"
+    id: 5,
+    name: "Maywa",
+    image: "/images/nuts/Maywa.png",
+    category : "nuts",
+    weight : "0.5kg",
+    price : 300,
+    originalPrice: 350,
+    isVegetarian : true,
+    instock: true,
+    description: "Best premium quality Apples."
   },
   {
-    "id": 6,
-    "name": "Mix",
-    "image": "/images/nuts/Mix.png"
+    id: 6,
+    name: "Mix",
+    image: "/images/nuts/Mix.png",
+    category : "nuts",
+    weight : "0.5kg",
+    price : 300,
+    originalPrice: 350,
+    isVegetarian : true,
+    instock: true,
+    description: "Best premium quality Apples."
   },
   {
-    "id": 7,
-    "name": "Zufran",
-    "image": "/images/nuts/Zufran.png"
+    id: 7,
+    name: "Zufran",
+    image: "/images/nuts/Zufran.png",
+    category : "nuts",
+    weight : "0.5kg",
+    price : 300,
+    originalPrice: 350,
+    isVegetarian : true,
+    instock: true,
+    description: "Best premium quality Apples."
   },
   {
-    "id": 8,
-    "name": "Pistachio",
-    "image":"/images/nuts/Pistachio.png"
+    id: 8,
+    name: "Pistachio",
+    image:"/images/nuts/Pistachio.png",
+    category : "nuts",
+    weight : "0.5kg",
+    price : 300,
+    originalPrice: 350,
+    isVegetarian : true,
+    instock: true,
+    description: "Best premium quality Apples."
   },
   {
-    "id": 9,
-    "name": "Walnuts Nut",
-    "image": "/images/nuts/walnuts.png"
+    id: 9,
+    name: "Walnuts Nut",
+    image: "/images/nuts/walnuts.png",
+    category : "nuts",
+    weight : "0.5kg",
+    price : 300,
+    originalPrice: 350,
+    isVegetarian : true,
+    instock: true,
+    description: "Best premium quality Apples."
   }
 ]

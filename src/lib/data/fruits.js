@@ -1,47 +1,110 @@
-[
+export const fruits =[
   {
-    "id": 1,
-    "name": "Apple",
-    "image": "/images/fruits/apple.png"
+    id: 1,
+    name: "Apple",
+    image: "/images/fruits/apple.png",
+    category : "fruits",
+    weight : "0.5kg",
+    price : 300,
+    originalPrice: 350,
+    isVegetarian : true,
+    instock: true,
+    description: "Best premium quality Apples."
   },
   {
-    "id": 2,
-    "name": "Banana",
-    "image": "/images/fruits/banana.png"
+    id: 2,
+    name: "Banana",
+    image: "/images/fruits/banana.png",
+    category : "fruits",
+    weight : "0.5kg",
+    price : 300,
+    originalPrice: 350,
+    isVegetarian : true,
+    instock: true,
+    description: "Best premium quality Bananas."
   },
   {
-    "id": 3,
-    "name": "Berries",
-    "image": "/images/fruits/berries.png"
+    id: 3,
+    name: "Berries",
+    image: "/images/fruits/berries.png",
+    category : "fruits",
+    weight : "0.5kg",
+    price : 300,
+    originalPrice: 350,
+    isVegetarian : true,
+    instock: true,
+    description: "Best premium quality Berries."
   },
   {
-    "id": 4,
-    "name": "Grapes",
-    "image": "/images/fruits/grapes.png"
+    id: 4,
+    name: "Grapes",
+    image: "/images/fruits/grapes.png",
+    category : "fruits",
+    weight : "0.5kg",
+    price : 300,
+    originalPrice: 350,
+    isVegetarian : true,
+    instock: true,
+    description: "Best premium quality Apples."
   },
   {
-    "id": 5,
-    "name": "Kiwi",
-    "image": "/images/fruits/kiwi.png"
+    id: 5,
+    name: "Kiwi",
+    image: "/images/fruits/kiwi.png",
+    category : "fruits",
+    weight : "0.5kg",
+    price : 300,
+    originalPrice: 350,
+    isVegetarian : true,
+    instock: true,
+    description: "Best premium quality Apples."
   },
   {
-    "id": 6,
-    "name": "Papaya",
-    "image": "/images/fruits/Papaya.png"
+    id: 6,
+    name: "Papaya",
+    image: "/images/fruits/Papaya.png",
+    category : "fruits",
+    weight : "0.5kg",
+    price : 300,
+    originalPrice: 350,
+    isVegetarian : true,
+    instock: true,
+    description: "Best premium quality Apples."
   },
   {
-    "id": 7,
-    "name": "Peach",
-    "image": "/images/fruits/peach.png"
+    id: 7,
+    name: "Peach",
+    image: "/images/fruits/peach.png",
+    category : "fruits",
+    weight : "0.5kg",
+    price : 300,
+    originalPrice: 350,
+    isVegetarian : true,
+    instock: true,
+    description: "Best premium quality Apples."
   },
   {
-    "id": 8,
-    "name": "Pineapple",
-    "image": "/images/fruits/pineapple.png"
+    id: 8,
+    name: "Pineapple",
+    image: "/images/fruits/pineapple.png",
+    category : "fruits",
+    weight : "0.5kg",
+    price : 300,
+    originalPrice: 350,
+    isVegetarian : true,
+    instock: true,
+    description: "Best premium quality Apples."
   },
   {
-    "id": 9,
-    "name": "Pomegranete",
-    "image": "/images/fruits/Pomegranete.png"
+    id: 9,
+    name: "Pomegranete",
+    image: "/images/fruits/Pomegranete.png",
+    category : "fruits",
+    weight : "0.5kg",
+    price : 300,
+    originalPrice: 350,
+    isVegetarian : true,
+    instock: true,
+    description: "Best premium quality Apples."
   }
 ]

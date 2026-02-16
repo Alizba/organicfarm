@@ -6,7 +6,7 @@ import { Navigation } from "swiper/modules";
 import "swiper/css/navigation";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
-import CategoryCard from "./CategoryCard";
+import CategoryCard from "../category/CategoryCard";
 import { categories } from "@/lib/data/categoryData";
 
 export default function CategorySlider() {

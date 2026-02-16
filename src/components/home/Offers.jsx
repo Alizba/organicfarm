@@ -28,7 +28,7 @@ const Offers = () => {
                         <p className='text-xs font-semibold text-orange-600 uppercase tracking-widest italic opacity-70'>Shop for</p>
                         <h2 className='text-2xl font-bold text-gray-800 leading-tight'>FRESH FRUITS<br/>ONLINE</h2>
                         <p className='text-base font-semibold text-orange-500 flex items-center justify-center sm:justify-start gap-2'>
-                            <span className='text-xl'>🎉</span>
+                      
                             Save up to <span className='text-xl text-orange-600'>40%</span>
                         </p>
                         <div className='pt-2'>
@@ -66,7 +66,7 @@ const Offers = () => {
                         <p className='text-xs font-semibold text-green-600 uppercase tracking-widest italic opacity-70'>Shop for</p>
                         <h2 className='text-2xl font-bold text-gray-800 leading-tight'>FRESH VEGETABLES<br/>ONLINE</h2>
                         <p className='text-base font-semibold text-green-500 flex items-center justify-center sm:justify-start gap-2'>
-                            <span className='text-xl'>🌿</span>
+                          
                             Save up to <span className='text-xl text-green-600'>40%</span>
                         </p>
                         <div className='pt-2'>
