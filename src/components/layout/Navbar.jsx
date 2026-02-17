@@ -2,7 +2,8 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
-import { Search, ShoppingCart, User, Menu, X } from 'lucide-react'
+import { Search, ShoppingCart, User, Menu, X, User2Icon } from 'lucide-react'
+import Button from '../ui/Button'
 
 const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
@@ -20,8 +21,8 @@ const Navbar = () => {
         </Link>
 
         <div className="hidden md:flex flex-1 lg:gap-8 md:gap-5 ">
-          <Link href="/" className="text-gray-700 font-medium hover:text-green-800 transition-colors relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 after:bg-green-800 after:transition-all after:duration-300 hover:after:w-full">    
-                  Home
+          <Link href="/" className="text-gray-700 font-medium hover:text-green-800 transition-colors relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 after:bg-green-800 after:transition-all after:duration-300 hover:after:w-full">
+            Home
           </Link>
           <Link href="/shop" className="text-gray-700 font-medium hover:text-green-800 transition-colors relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 after:bg-green-800 after:transition-all after:duration-300 hover:after:w-full">
             Shop
@@ -44,27 +45,14 @@ const Navbar = () => {
           >
             <Search size={20} />
           </button>
-
-
-
-          <button
-            className="relative p-2 text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
-            aria-label="Cart"
-          >
+          
+          <Link href="/login">
             <ShoppingCart size={20} />
-            <span className="absolute top-0 right-0 bg-red-500 text-white text-xs font-semibold px-1.5 py-0.5 rounded-full min-w-5 text-center">
-              3
-            </span>
-          </button>
-
-          <Link
-            href="/login"
-            className="hidden md:flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-md font-medium hover:bg-gray-800 transition-colors"
-          >
-            <User size={18} />
-            <span>Login</span>
           </Link>
 
+          <Link href="/login">
+            <Button>Login</Button>
+          </Link>
           <button
             className="md:hidden p-2 text-gray-700"
             onClick={toggleMobileMenu}

@@ -7,7 +7,7 @@ export const Deal = () => {
   return (
     <section
       className="relative py-12 px-4 md:px-8 bg-cover bg-center bg-no-repeat overflow-hidden"
-      style={{ backgroundImage: "url('./images/dealBg.jpg')" }}
+      style={{ backgroundImage: "url('./images/dealBg.jpg')",  }}
     >
       {/* Blur Overlay */}
       <div className="absolute inset-0 backdrop-blur-md bg-white/30 z-0"></div>
@@ -38,8 +38,7 @@ export const Deal = () => {
           </div>
         </div>
         <div className="flex-1 w-full">
-          <DealSlider 
-          alt= "deal"/>
+          <DealSlider alt="img"/>
         </div>
       </div>
     </section>
