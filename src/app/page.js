@@ -9,7 +9,6 @@ import { Deal } from "@/components/home/deals/Deal";
 import Data from "@/components/home/Data";
 import TopSelling from "@/components/home/TopSelling";
 import Partners from "@/components/home/Partners";
-import Testimonal from "@/components/home/Testimonal";
 import Contact from "@/components/home/Contact";
 
 export default async function Home() {
@@ -23,7 +22,7 @@ export default async function Home() {
 
   return (
     <>
-    <Hero/>  
+    <Hero/>
     <Cards/>
     <Cta/>
     <Category/>
@@ -32,9 +31,8 @@ export default async function Home() {
     <Knowledge/>
     <Deal/>
     <Data/>
-    <TopSelling/>
     <Partners/>
-    <Testimonal/>
+    <TopSelling/>
     <Contact/>
     </>
   );

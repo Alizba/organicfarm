@@ -38,7 +38,8 @@ export const Deal = () => {
           </div>
         </div>
         <div className="flex-1 w-full">
-          <DealSlider />
+          <DealSlider 
+          alt= "deal"/>
         </div>
       </div>
     </section>
