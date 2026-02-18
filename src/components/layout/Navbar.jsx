@@ -62,7 +62,7 @@ const Navbar = () => {
             <Search size={20} />
           </button>
 
-          <button onClick={handleCartClick} className="relative">
+          <button onClick={handleCartClick} className="relative cursor-pointer">
             <ShoppingCart size={20} />
 
             {cart.length > 0 && (
@@ -74,7 +74,7 @@ const Navbar = () => {
 
 
           <Link href="/login">
-            <Button>Login</Button>
+            <Button className='cursor-pointer'>Login</Button>
           </Link>
           <button
             className="md:hidden p-2 text-gray-700"

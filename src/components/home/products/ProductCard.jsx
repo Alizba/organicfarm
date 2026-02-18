@@ -4,6 +4,7 @@ import Image from "next/image";
 import { ShoppingCart } from "lucide-react";
 import Button from "@/components/ui/Button";
 import { useCart } from "@/contexts/CartContext";
+import toast from "react-hot-toast";
 
 export default function ProductCard({ product }) {
 
@@ -70,10 +71,20 @@ export default function ProductCard({ product }) {
 
         <Button
         onClick={() => {
-          console.log("clicked");
-          addToCart(product)}
+          addToCart(product)
+          toast.success(`${product.name} added to cart`,{
+
+            duration: 2000,
+            style : {
+              borderRadius : "10px",
+              background: "#333",
+              color: "#fff"              
+            }
+          }
+          )
         }
-          className="group bg-green-500 hover:bg-orange-400 transition-all duration-300 ease-in-out relative overflow-hidden"
+        }
+          className="group bg-green-500 hover:bg-orange-400 transition-all duration-300 ease-in-out relative overflow-hidden cursor-pointer"
         >
           <span className="group-hover:opacity-0 group-hover:scale-0 transition-all duration-300">
             Add to Cart
