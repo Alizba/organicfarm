@@ -1,6 +1,7 @@
 
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
+import { CartProvider } from "@/contexts/CartContext";
 
 export const metadata = {
   title: "BIOPROX",
@@ -10,9 +11,11 @@ export const metadata = {
 export default function MarketingLayout({ children }) {
   return (
     <>
-      <Navbar />
-      {children}
-      <Footer />
+      <CartProvider>
+        <Navbar />
+        {children}
+        <Footer />
+      </CartProvider>
     </>
   )
 }

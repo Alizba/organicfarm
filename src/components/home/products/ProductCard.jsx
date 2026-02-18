@@ -1,10 +1,18 @@
+"use client"
+
 import Image from "next/image";
 import { ShoppingCart } from "lucide-react";
 import Button from "@/components/ui/Button";
+import { useCart } from "@/contexts/CartContext";
 
 export default function ProductCard({ product }) {
+
+  const { addToCart } = useCart();
+
   const hasDiscount = product.originalPrice && product.originalPrice > product.price;
 
+
+  console.log("cart context:", useCart());
 
   return (
     <div className="bg-white rounded-2xl p-4 hover:shadow-xl transition-all duration-300 cursor-pointer group border border-gray-200 hover:border-green-300 flex flex-col h-full">
@@ -61,6 +69,10 @@ export default function ProductCard({ product }) {
         )}
 
         <Button
+        onClick={() => {
+          console.log("clicked");
+          addToCart(product)}
+        }
           className="group bg-green-500 hover:bg-orange-400 transition-all duration-300 ease-in-out relative overflow-hidden"
         >
           <span className="group-hover:opacity-0 group-hover:scale-0 transition-all duration-300">

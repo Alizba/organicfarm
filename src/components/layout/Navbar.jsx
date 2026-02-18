@@ -1,12 +1,28 @@
-'use client'
+"use client"
 
 import Link from 'next/link'
 import { useState } from 'react'
 import { Search, ShoppingCart, User, Menu, X, User2Icon } from 'lucide-react'
 import Button from '../ui/Button'
+import { useCart } from '@/contexts/CartContext'
+import { useRouter } from 'next/navigation'
 
 const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+
+  const { cart } = useCart();
+  const router = useRouter();
+
+  const isLoggedIn = false;
+
+  const handleCartClick = () => {
+    if (isLoggedIn) {
+      router.push("/cart")
+    }
+    else {
+      router.push("/login")
+    }
+  }
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen)
@@ -45,10 +61,17 @@ const Navbar = () => {
           >
             <Search size={20} />
           </button>
-          
-          <Link href="/login">
+
+          <button onClick={handleCartClick} className="relative">
             <ShoppingCart size={20} />
-          </Link>
+
+            {cart.length > 0 && (
+              <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-semibold px-1.5 py-0.5 rounded-full">
+                {cart.length}
+              </span>
+            )}
+          </button>
+
 
           <Link href="/login">
             <Button>Login</Button>
@@ -120,13 +143,15 @@ const Navbar = () => {
         {/* Mobile Actions */}
         <div className="flex flex-col p-4 gap-2">
 
-          <button className="relative flex items-center justify-start gap-2 w-full px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-md transition-colors">
+          <button onClick={handleCartClick} className="relative">
             <ShoppingCart size={20} />
-            <span className="absolute top-2 left-2 bg-red-500 text-white text-xs font-semibold px-1.5 py-0.5 rounded-full min-w-5 text-center">
-              3
-            </span>
-            <span className="ml-auto">Cart</span>
+            {cart.length > 0 && (
+              <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs px-1.5 rounded-full">
+                {cart.length}
+              </span>
+            )}
           </button>
+
           <Link
             href="/login"
             onClick={toggleMobileMenu}
