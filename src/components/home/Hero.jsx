@@ -1,9 +1,12 @@
 import React from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Leaf, ArrowRight, Apple, Carrot, Sprout } from 'lucide-react'
+import { Leaf, Apple, Carrot, Sprout } from 'lucide-react'
+import Button from '../ui/Button'
 
 const Hero = () => {
+
+
   return (
     <section className='relative overflow-hidden'>
       <div className='absolute inset-0 pointer-events-none opacity-20'>
@@ -26,24 +29,25 @@ const Hero = () => {
               <span className='text-sm font-medium text-green-700'>100% Organic & Natural</span>
             </div>
 
-            <h1 className='text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight text-gray-900'>
+            <h1 className='text-3xl sm:text-3xl md:text-3xl lg:text-5xl font-bold mb-6 leading-tight text-gray-900'>
               Environment Friendly
               <span className='block text-green-600 mt-2'>Organic Farm</span>
             </h1>
 
-            <p className='text-base sm:text-lg md:text-lg lg:text-xl text-gray-700 mb-8 leading-relaxed max-w-xl mx-auto lg:mx-0'>
+            <p className='text-base sm:text-lg md:text-md lg:text-lg text-gray-700 mb-8 leading-relaxed max-w-xl mx-auto lg:mx-0'>
               Discover fresh, pesticide-free produce grown with care for you and the planet.
               Experience the difference of truly organic farming.
             </p>
 
             <div className='flex flex-col sm:flex-row gap-4 justify-center lg:justify-start md:w-3/4 w-1/2 m-auto lg:w-full'>
+            <Button className='rounded-4xl px-10'>
               <Link
                 href="/shop"
-                className='inline-flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-full font-semibold text-base sm:text-lg transition-all shadow-lg hover:shadow-xl hover:scale-105'
               >
                 Shop Now
-                <ArrowRight className='w-5 h-5' />
               </Link>
+            </Button>
+            
 
               <Link
                 href="/about"

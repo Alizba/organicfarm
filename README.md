@@ -44,4 +44,9 @@ UTILS is like helper logic
 
 inside component create folder layout and inside layout created Navbar.jsx
 
+dbConfig -> dbConfig.js
+helpers -> mailer.js
+models -> userModel.js
+app -> api -> users -> login -> route.jsx
+app -> api -> users -> signup -> route.jsx  ✅ - post working properly 
 
