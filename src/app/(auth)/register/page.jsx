@@ -163,10 +163,10 @@ export default function RegisterPage() {
             <form onSubmit={handleSubmit} className="space-y-4">
 
               {/* Name row */}
-              <div className="anim-fade-up delay-1 grid grid-cols-2 gap-3.5">
+              <div className="anim-fade-up delay-1">
                 <div>
                   <label htmlFor="firstName" className="block text-[11px] font-medium tracking-[0.8px] uppercase text-[#3a5a2a] mb-2">
-                    First Name
+                    Username
                   </label>
                   <div className="relative">
                     <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400 text-[14px] pointer-events-none select-none">👤</span>
@@ -174,26 +174,8 @@ export default function RegisterPage() {
                       id="firstName"
                       type="text"
                       name="firstName"
-                      placeholder="Jane"
+                      placeholder="Ali"
                       value={formData.firstName}
-                      onChange={handleChange}
-                      required
-                      className="w-full pl-9 pr-3 py-3 rounded-xl border border-stone-200 bg-white text-[#1a2e1a] text-sm placeholder-stone-300 outline-none transition-all focus:border-[#64a828] focus:ring-2 focus:ring-[#64a828]/15 hover:border-stone-300"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label htmlFor="lastName" className="block text-[11px] font-medium tracking-[0.8px] uppercase text-[#3a5a2a] mb-2">
-                    Last Name
-                  </label>
-                  <div className="relative">
-                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400 text-[14px] pointer-events-none select-none">👤</span>
-                    <input
-                      id="lastName"
-                      type="text"
-                      name="lastName"
-                      placeholder="Doe"
-                      value={formData.lastName}
                       onChange={handleChange}
                       required
                       className="w-full pl-9 pr-3 py-3 rounded-xl border border-stone-200 bg-white text-[#1a2e1a] text-sm placeholder-stone-300 outline-none transition-all focus:border-[#64a828] focus:ring-2 focus:ring-[#64a828]/15 hover:border-stone-300"
@@ -222,25 +204,6 @@ export default function RegisterPage() {
                 </div>
               </div>
 
-              {/* Phone */}
-              <div className="anim-fade-up delay-3">
-                <label htmlFor="phone" className="block text-[11px] font-medium tracking-[0.8px] uppercase text-[#3a5a2a] mb-2">
-                  Phone Number{" "}
-                  <span className="normal-case tracking-normal text-stone-400 font-light">· optional</span>
-                </label>
-                <div className="relative">
-                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400 text-[14px] pointer-events-none select-none">📞</span>
-                  <input
-                    id="phone"
-                    type="tel"
-                    name="phone"
-                    placeholder="+1 (555) 000-0000"
-                    value={formData.phone}
-                    onChange={handleChange}
-                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-stone-200 bg-white text-[#1a2e1a] text-sm placeholder-stone-300 outline-none transition-all focus:border-[#64a828] focus:ring-2 focus:ring-[#64a828]/15 hover:border-stone-300"
-                  />
-                </div>
-              </div>
 
               {/* Password */}
               <div className="anim-fade-up delay-4">
@@ -277,44 +240,6 @@ export default function RegisterPage() {
                     </div>
                     <span className={`text-[11px] font-medium ${strength.text}`}>{strength.label}</span>
                   </div>
-                )}
-              </div>
-
-              {/* Confirm password */}
-              <div className="anim-fade-up delay-5">
-                <label htmlFor="confirmPassword" className="block text-[11px] font-medium tracking-[0.8px] uppercase text-[#3a5a2a] mb-2">
-                  Confirm Password
-                </label>
-                <div className="relative">
-                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400 text-[14px] pointer-events-none select-none">🔐</span>
-                  <input
-                    id="confirmPassword"
-                    type={showConfirm ? "text" : "password"}
-                    name="confirmPassword"
-                    placeholder="Re-enter your password"
-                    value={formData.confirmPassword}
-                    onChange={handleChange}
-                    required
-                    className={`w-full pl-10 pr-11 py-3 rounded-xl border bg-white text-[#1a2e1a] text-sm placeholder-stone-300 outline-none transition-all hover:border-stone-300
-                      ${passwordsMismatch ? "border-red-400 focus:border-red-400 focus:ring-2 focus:ring-red-400/15" : ""}
-                      ${passwordsMatch   ? "border-[#64a828] focus:border-[#64a828] focus:ring-2 focus:ring-[#64a828]/15" : ""}
-                      ${!passwordsMatch && !passwordsMismatch ? "border-stone-200 focus:border-[#64a828] focus:ring-2 focus:ring-[#64a828]/15" : ""}
-                    `}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirm(!showConfirm)}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-[#3a7a18] transition-colors text-base"
-                    aria-label="Toggle confirm password visibility"
-                  >
-                    {showConfirm ? "🙈" : "👁"}
-                  </button>
-                </div>
-                {passwordsMismatch && (
-                  <p className="text-[11.5px] text-red-500 mt-1.5">Passwords do not match</p>
-                )}
-                {passwordsMatch && (
-                  <p className="text-[11.5px] text-[#3a7a18] mt-1.5">✓ Passwords match</p>
                 )}
               </div>
 
