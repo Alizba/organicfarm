@@ -53,7 +53,6 @@ export async function POST(request) {
     catch(error){
         console.log("FULL ERROR: ", error)
         return NextResponse.json({error: error.message},
-            {error: error.message},
             {status: 500}
         )
     }
