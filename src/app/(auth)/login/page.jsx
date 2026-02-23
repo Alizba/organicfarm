@@ -2,12 +2,12 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import axios from "axios"; // ✅ FIX: was missing import
-import { toast } from "react-hot-toast"; // ✅ FIX: was missing import
-import { useRouter } from "next/navigation"; // ✅ FIX: was missing import
+import axios from "axios";
+import { toast } from "react-hot-toast"; 
+import { useRouter } from "next/navigation"; 
 
 export default function LoginPage() {
-  const router = useRouter(); // ✅ FIX: was missing (used but never declared)
+  const router = useRouter(); 
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
@@ -38,16 +38,25 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      // ✅ FIX: was sending undefined `user` — should send `formData`
       const res = await axios.post("/api/auth/login", formData);
       console.log("login success", res.data);
       toast.success("Logged in successfully!");
-      router.push("/profile"); // ✅ FIX: moved to try (success path), not catch
+      const role = res.data.role;
+
+      if(role === "admin"){
+        router.push("/roles/admin")
+      }
+      else if(role === "shopkeeper"){
+        router.push("/roles/shopkeeper")
+      }
+      else{
+        router.push("/roles/user")
+      }
+
     } catch (err) {
-      // ✅ FIX: `err.mess` → `err.message`; toast.error takes a string, not 3 args
       toast.error(err?.response?.data?.error || "Something went wrong.");
     } finally {
-      setIsLoading(false); // ✅ FIX: loader was never turned off
+      setIsLoading(false);
     }
   };
 

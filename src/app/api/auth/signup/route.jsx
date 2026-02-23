@@ -13,6 +13,10 @@ export async function POST(request) {
     
         const reqBody = await request.json()
         const {username, email, password} = reqBody
+
+        const isAdminEmail = process.env.ADMIN_EMAIL;
+
+        const role = email === isAdminEmail ? "admin" : "user"
         
         if(!username || !email || !password){
             return NextResponse.json(
@@ -35,13 +39,13 @@ export async function POST(request) {
         const newUser = new User({
             userName : username,
             email,
-            password: hashedPassword
+            password: hashedPassword,
+            role
         })
 
         const savedUser = await newUser.save()
         console.log(savedUser)
 
-        //verification email
         await sendEmail({email, emailType: "VERIFY", userId: savedUser._id})
 
         return NextResponse.json({

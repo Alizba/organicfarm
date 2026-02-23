@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
-import { Search, ShoppingCart, User, Menu, X, User2Icon } from 'lucide-react'
+import { Search, ShoppingCart, User, Menu, X, User2Icon, UserCircle, UserIcon } from 'lucide-react'
 import Button from '../ui/Button'
 import { useCart } from '@/contexts/CartContext'
 import { useRouter } from 'next/navigation'
@@ -74,7 +74,7 @@ const Navbar = () => {
 
 
           <Link href="/login">
-            <Button className='cursor-pointer'>Login</Button>
+            <Button className='cursor-pointer'><UserIcon/></Button>
           </Link>
           <button
             className="md:hidden p-2 text-gray-700"
@@ -158,7 +158,7 @@ const Navbar = () => {
             className="flex items-center justify-center gap-2 px-4 py-3 bg-gray-900 text-white rounded-md font-medium hover:bg-gray-800 transition-colors mt-2"
           >
             <User size={18} />
-            <span>Login</span>
+            <span><UserIcon/></span>
           </Link>
         </div>
       </div>

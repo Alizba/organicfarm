@@ -1,20 +1,33 @@
+import { NextResponse } from "next/server";
 import { connect } from "@/dbConfig/dbConfig";
-import User from "@/models/userModel"
-import { NextResponse } from 'next/server'
-import { getDataFromToken } from "@/helpers/getDataFromToken" 
+import User from "@/models/userModel";
+import { getDataFromToken } from "@/helpers/getDataFromToken";
 
-connect()
+connect();
 
-export async function POST(request) {
-    try {
-        const userId = await getDataFromToken(request)
-        const user = await User.findOne({ _id: userId }).select("-password") 
+export async function GET(request) {
+  try {
+    const userId = await getDataFromToken(request);
 
-        return NextResponse.json({
-            message: "user found",
-            data: user
-        })
-    } catch (error) {
-        return NextResponse.json({ error: error.message }, { status: 500 })
+    const user = await User.findById(userId).select(
+      "-password -verifyToken -verifyTokenExpiry -forgotPasswordToken -forgotPasswordTokenExpiry"
+    );
+
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
+
+    return NextResponse.json({
+      user: {
+        id:         user._id,
+        userName:   user.userName,
+        email:      user.email,
+        role:       user.role,
+        isVerified: user.isVerified,
+        isAdmin:    user.isAdmin,
+      },
+    });
+  } catch (error) {
+    return NextResponse.json({ error: error.message }, { status: 401 });
+  }
 }
