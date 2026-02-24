@@ -11,46 +11,66 @@ const css = `
   body { font-family: 'DM Sans', sans-serif; background: #fafaf9; }
   .fade-in { animation: fadeUp 0.4s ease both; }
   @keyframes fadeUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
-  .card:hover { box-shadow: 0 4px 24px rgba(0,0,0,0.09) !important; transform: translateY(-1px); transition: all 0.2s ease; }
+  .card { transition: all 0.2s ease; }
+  .card:hover { box-shadow: 0 4px 24px rgba(0,0,0,0.09) !important; transform: translateY(-1px); }
   .nav-link:hover { color: #0f172a !important; }
   .btn-primary:hover { background: #1e293b !important; }
   .stat-card { animation: fadeUp 0.4s ease both; }
   .stat-card:nth-child(1) { animation-delay: 0.05s; }
-  .stat-card:nth-child(2) { animation-delay: 0.1s; }
+  .stat-card:nth-child(2) { animation-delay: 0.10s; }
   .stat-card:nth-child(3) { animation-delay: 0.15s; }
-  .stat-card:nth-child(4) { animation-delay: 0.2s; }
+  .stat-card:nth-child(4) { animation-delay: 0.20s; }
+  .stat-card:nth-child(5) { animation-delay: 0.25s; }
+  .row:hover { background: #f8fafc !important; }
 `;
+
+const NAV = [
+  { label: "Overview",      href: "/roles/admin",           active: true  },
+  { label: "Sell Interests", href: "/roles/admin/interests", active: false },
+  { label: "Orders",        href: "/roles/admin/orders",     active: false },
+];
 
 export default function AdminDashboard() {
   const { user, loading, logout } = useAuth();
   const router = useRouter();
-  const [stats, setStats] = useState({ total: 0, pending: 0, approved: 0, rejected: 0 });
-  const [recentRequests, setRecentRequests] = useState([]);
-  const [fetching, setFetching] = useState(true);
+
+  const [stats, setStats]                   = useState({ interests: 0, newInterests: 0, orders: 0, pendingOrders: 0, revenue: 0 });
+  const [recentInterests, setRecentInterests] = useState([]);
+  const [recentOrders, setRecentOrders]       = useState([]);
+  const [fetching, setFetching]               = useState(true);
 
   useEffect(() => {
     if (!loading && (!user || user.role !== "admin")) router.replace("/login");
   }, [user, loading]);
 
   useEffect(() => {
-    if (user?.role === "admin") fetchStats();
+    if (user?.role === "admin") fetchAll();
   }, [user]);
 
-  const fetchStats = async () => {
+  const fetchAll = async () => {
     try {
-      const [all, pending, approved, rejected] = await Promise.all([
-        axios.get("/api/admin/shopRequests"),
-        axios.get("/api/admin/shopRequests?status=pending"),
-        axios.get("/api/admin/shopRequests?status=approved"),
-        axios.get("/api/admin/shopRequests?status=rejected"),
+      const [interests, orders] = await Promise.all([
+        axios.get("/api/shop-interest"),
+        axios.get("/api/checkout"),
       ]);
+
+      const interestList = interests.data.interests || [];
+      const orderList    = orders.data.orders || [];
+
+      const revenue = orderList
+        .filter((o) => o.status !== "cancelled")
+        .reduce((sum, o) => sum + (o.total || 0), 0);
+
       setStats({
-        total:    all.data.requests?.length || 0,
-        pending:  pending.data.requests?.length || 0,
-        approved: approved.data.requests?.length || 0,
-        rejected: rejected.data.requests?.length || 0,
+        interests:    interestList.length,
+        newInterests: interestList.filter((i) => i.status === "new").length,
+        orders:       orderList.length,
+        pendingOrders: orderList.filter((o) => o.status === "pending").length,
+        revenue,
       });
-      setRecentRequests(all.data.requests?.slice(0, 5) || []);
+
+      setRecentInterests(interestList.slice(0, 5));
+      setRecentOrders(orderList.slice(0, 5));
     } catch (e) {
       console.error(e);
     } finally {
@@ -61,10 +81,11 @@ export default function AdminDashboard() {
   if (loading || !user) return <Loader />;
 
   const statCards = [
-    { label: "Total Requests", value: stats.total,    accent: "#0f172a" },
-    { label: "Pending",        value: stats.pending,  accent: "#f59e0b" },
-    { label: "Approved",       value: stats.approved, accent: "#10b981" },
-    { label: "Rejected",       value: stats.rejected, accent: "#ef4444" },
+    { label: "Sell Interests",  value: stats.interests,     accent: "#6366f1", icon: "🏪" },
+    { label: "New Interests",   value: stats.newInterests,  accent: "#f59e0b", icon: "✨" },
+    { label: "Total Orders",    value: stats.orders,        accent: "#0f172a", icon: "📦" },
+    { label: "Pending Orders",  value: stats.pendingOrders, accent: "#ef4444", icon: "⏳" },
+    { label: "Total Revenue",   value: `Rs. ${stats.revenue.toLocaleString()}`, accent: "#10b981", icon: "💰" },
   ];
 
   return (
@@ -83,8 +104,13 @@ export default function AdminDashboard() {
             <span style={{ fontFamily: "'Instrument Serif', serif", fontSize: 20, color: "#0f172a" }}>
               Admin
             </span>
-            <Link href="/dashboard/admin" className="nav-link" style={{ fontSize: 13, fontWeight: 600, color: "#0f172a", textDecoration: "none" }}>Overview</Link>
-            <Link href="/dashboard/admin/request" className="nav-link" style={{ fontSize: 13, color: "#64748b", textDecoration: "none" }}>Shop Requests</Link>
+            {NAV.map((n) => (
+              <Link key={n.href} href={n.href} className="nav-link" style={{
+                fontSize: 13, textDecoration: "none", transition: "color 0.15s",
+                fontWeight: n.active ? 700 : 500,
+                color: n.active ? "#0f172a" : "#64748b",
+              }}>{n.label}</Link>
+            ))}
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
             <span style={{ fontSize: 13, color: "#64748b" }}>{user.userName}</span>
@@ -92,79 +118,143 @@ export default function AdminDashboard() {
               background: "#0f172a", color: "#fff", border: "none",
               borderRadius: 8, padding: "7px 16px", fontSize: 12,
               fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
+              transition: "background 0.15s",
             }}>Logout</button>
           </div>
         </nav>
 
-        <div style={{ maxWidth: 1100, margin: "0 auto", padding: "48px 40px" }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "48px 40px" }}>
 
           {/* Header */}
           <div className="fade-in" style={{ marginBottom: 40 }}>
-           
             <h1 style={{ fontFamily: "'Instrument Serif', serif", fontSize: 36, color: "#0f172a", fontWeight: 400 }}>
               Good morning, {user.userName} 👋
             </h1>
             <p style={{ color: "#64748b", marginTop: 6, fontSize: 15 }}>
-              Here's what's happening with your platform today.
+              Here's what's happening on your platform today.
             </p>
           </div>
 
           {/* Stat Cards */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 40 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 16, marginBottom: 40 }}>
             {statCards.map((s) => (
               <div key={s.label} className="stat-card card" style={{
                 background: "#fff", border: "1px solid #e5e7eb",
-                borderRadius: 12, padding: 24,
+                borderRadius: 12, padding: 20,
                 boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
                 borderTop: `3px solid ${s.accent}`,
                 cursor: "default",
               }}>
-                <div style={{ fontSize: 32, fontWeight: 800, color: s.accent, fontFamily: "'Instrument Serif', serif" }}>
+                <div style={{ fontSize: 22, marginBottom: 10 }}>{s.icon}</div>
+                <div style={{ fontSize: 28, fontWeight: 800, color: s.accent, fontFamily: "'Instrument Serif', serif" }}>
                   {fetching ? "—" : s.value}
                 </div>
-                <div style={{ fontSize: 13, color: "#64748b", marginTop: 4, fontWeight: 500 }}>
+                <div style={{ fontSize: 12, color: "#64748b", marginTop: 4, fontWeight: 500 }}>
                   {s.label}
                 </div>
               </div>
             ))}
           </div>
 
-          {/* Recent Requests */}
-          <div className="fade-in" style={{
-            background: "#fff", border: "1px solid #e5e7eb",
-            borderRadius: 12, overflow: "hidden",
-            boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
-          }}>
-            <div style={{
-              padding: "20px 24px", borderBottom: "1px solid #f1f5f9",
-              display: "flex", justifyContent: "space-between", alignItems: "center",
+          {/* Two column panels */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
+
+            {/* Recent Sell Interests */}
+            <div className="fade-in" style={{
+              background: "#fff", border: "1px solid #e5e7eb",
+              borderRadius: 12, overflow: "hidden",
+              boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
             }}>
-              <span style={{ fontWeight: 700, fontSize: 15, color: "#0f172a" }}>Recent Shop Requests</span>
-              <Link href="/dashboard/admin/request" style={{
-                fontSize: 13, color: "#3b82f6", textDecoration: "none", fontWeight: 600,
-              }}>View all →</Link>
-            </div>
-            {fetching ? (
-              <div style={{ padding: 40, textAlign: "center", color: "#94a3b8", fontSize: 14 }}>Loading...</div>
-            ) : recentRequests.length === 0 ? (
-              <div style={{ padding: 40, textAlign: "center", color: "#94a3b8", fontSize: 14 }}>No requests yet</div>
-            ) : (
-              recentRequests.map((r, i) => (
-                <div key={r._id} style={{
-                  padding: "16px 24px",
-                  borderBottom: i < recentRequests.length - 1 ? "1px solid #f8fafc" : "none",
-                  display: "flex", alignItems: "center", justifyContent: "space-between",
-                }}>
-                  <div>
-                    <div style={{ fontWeight: 600, fontSize: 14, color: "#0f172a" }}>{r.shopName}</div>
-                    <div style={{ fontSize: 12, color: "#94a3b8", marginTop: 2 }}>
-                      {r.user?.userName} · {r.user?.email}
-                    </div>
-                  </div>
-                  <StatusBadge status={r.status} />
+              <div style={{
+                padding: "18px 24px", borderBottom: "1px solid #f1f5f9",
+                display: "flex", justifyContent: "space-between", alignItems: "center",
+              }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <span style={{ fontSize: 16 }}>🏪</span>
+                  <span style={{ fontWeight: 700, fontSize: 14, color: "#0f172a" }}>Sell Interests</span>
+                  {stats.newInterests > 0 && (
+                    <span style={{ background: "#6366f1", color: "#fff", fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 99 }}>
+                      {stats.newInterests} new
+                    </span>
+                  )}
                 </div>
-              ))
-            )}
+                <Link href="/roles/admin/interests" style={{ fontSize: 12, color: "#3b82f6", textDecoration: "none", fontWeight: 600 }}>
+                  View all →
+                </Link>
+              </div>
+
+              {fetching ? (
+                <div style={{ padding: 40, textAlign: "center", color: "#94a3b8", fontSize: 13 }}>Loading...</div>
+              ) : recentInterests.length === 0 ? (
+                <div style={{ padding: 40, textAlign: "center", color: "#94a3b8", fontSize: 13 }}>No interests yet</div>
+              ) : (
+                recentInterests.map((r, i) => (
+                  <div key={r._id} className="row" style={{
+                    padding: "14px 24px",
+                    borderBottom: i < recentInterests.length - 1 ? "1px solid #f8fafc" : "none",
+                    display: "flex", alignItems: "center", justifyContent: "space-between",
+                    background: "#fff", transition: "background 0.15s",
+                  }}>
+                    <div>
+                      <div style={{ fontWeight: 600, fontSize: 13, color: "#0f172a" }}>{r.shopName}</div>
+                      <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 2 }}>{r.fullName} · {r.email}</div>
+                    </div>
+                    <InterestBadge status={r.status} />
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* Recent Orders */}
+            <div className="fade-in" style={{
+              background: "#fff", border: "1px solid #e5e7eb",
+              borderRadius: 12, overflow: "hidden",
+              boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+            }}>
+              <div style={{
+                padding: "18px 24px", borderBottom: "1px solid #f1f5f9",
+                display: "flex", justifyContent: "space-between", alignItems: "center",
+              }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <span style={{ fontSize: 16 }}>📦</span>
+                  <span style={{ fontWeight: 700, fontSize: 14, color: "#0f172a" }}>Recent Orders</span>
+                  {stats.pendingOrders > 0 && (
+                    <span style={{ background: "#ef4444", color: "#fff", fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 99 }}>
+                      {stats.pendingOrders} pending
+                    </span>
+                  )}
+                </div>
+                <Link href="/roles/admin/orders" style={{ fontSize: 12, color: "#3b82f6", textDecoration: "none", fontWeight: 600 }}>
+                  View all →
+                </Link>
+              </div>
+
+              {fetching ? (
+                <div style={{ padding: 40, textAlign: "center", color: "#94a3b8", fontSize: 13 }}>Loading...</div>
+              ) : recentOrders.length === 0 ? (
+                <div style={{ padding: 40, textAlign: "center", color: "#94a3b8", fontSize: 13 }}>No orders yet</div>
+              ) : (
+                recentOrders.map((o, i) => (
+                  <div key={o._id} className="row" style={{
+                    padding: "14px 24px",
+                    borderBottom: i < recentOrders.length - 1 ? "1px solid #f8fafc" : "none",
+                    display: "flex", alignItems: "center", justifyContent: "space-between",
+                    background: "#fff", transition: "background 0.15s",
+                  }}>
+                    <div>
+                      <div style={{ fontWeight: 600, fontSize: 13, color: "#0f172a" }}>
+                        {o.customer?.fullName}
+                      </div>
+                      <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 2 }}>
+                        {o.items?.length} item{o.items?.length !== 1 ? "s" : ""} · Rs. {o.total?.toLocaleString()}
+                      </div>
+                    </div>
+                    <OrderBadge status={o.status} />
+                  </div>
+                ))
+              )}
+            </div>
+
           </div>
         </div>
       </div>
@@ -172,19 +262,36 @@ export default function AdminDashboard() {
   );
 }
 
-function StatusBadge({ status }) {
+function InterestBadge({ status }) {
   const map = {
-    pending:  { bg: "#fff8e1", color: "#d97706", label: "Pending" },
-    approved: { bg: "#ecfdf5", color: "#059669", label: "Approved" },
-    rejected: { bg: "#fef2f2", color: "#dc2626", label: "Rejected" },
+    new:       { bg: "#eff6ff", color: "#3b82f6",  label: "New"       },
+    contacted: { bg: "#fff8e1", color: "#d97706",  label: "Contacted" },
+    approved:  { bg: "#ecfdf5", color: "#059669",  label: "Approved"  },
+    rejected:  { bg: "#fef2f2", color: "#dc2626",  label: "Rejected"  },
+  };
+  const s = map[status] || map.new;
+  return <Badge bg={s.bg} color={s.color} label={s.label} />;
+}
+
+function OrderBadge({ status }) {
+  const map = {
+    pending:    { bg: "#fff8e1", color: "#d97706",  label: "Pending"    },
+    confirmed:  { bg: "#eff6ff", color: "#3b82f6",  label: "Confirmed"  },
+    processing: { bg: "#f5f3ff", color: "#7c3aed",  label: "Processing" },
+    shipped:    { bg: "#ecfeff", color: "#0891b2",  label: "Shipped"    },
+    delivered:  { bg: "#ecfdf5", color: "#059669",  label: "Delivered"  },
+    cancelled:  { bg: "#fef2f2", color: "#dc2626",  label: "Cancelled"  },
   };
   const s = map[status] || map.pending;
+  return <Badge bg={s.bg} color={s.color} label={s.label} />;
+}
+
+function Badge({ bg, color, label }) {
   return (
     <span style={{
-      background: s.bg, color: s.color, fontSize: 11,
-      fontWeight: 700, padding: "4px 10px", borderRadius: 99,
-      letterSpacing: 0.5,
-    }}>{s.label}</span>
+      background: bg, color, fontSize: 11,
+      fontWeight: 700, padding: "4px 10px", borderRadius: 99, letterSpacing: 0.5,
+    }}>{label}</span>
   );
 }
 

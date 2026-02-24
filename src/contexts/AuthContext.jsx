@@ -3,15 +3,13 @@ import { createContext, useContext, useEffect, useState, useCallback } from "rea
 import axios from "axios";
 import { useRouter } from "next/navigation";
 
-
 const AuthContext = createContext(null);
-
 
 export function AuthProvider({ children }) {
   const router = useRouter();
 
-  const [user, setUser]       = useState(null); 
-  const [loading, setLoading] = useState(true);  
+  const [user, setUser]       = useState(null);
+  const [loading, setLoading] = useState(true);
   const [error, setError]     = useState(null);
 
   const fetchUser = useCallback(async () => {
@@ -20,7 +18,7 @@ export function AuthProvider({ children }) {
       const { data } = await axios.get("/api/auth/me");
       setUser(data.user);
     } catch {
-      setUser(null); 
+      setUser(null);
     } finally {
       setLoading(false);
     }
@@ -54,7 +52,6 @@ export function AuthProvider({ children }) {
 
   const isAdmin      = user?.role === "admin";
   const isShopkeeper = user?.role === "shopkeeper";
-  const isUser       = user?.role === "user";
   const isLoggedIn   = !!user;
 
   const hasRole = (...roles) => roles.includes(user?.role);
@@ -66,7 +63,6 @@ export function AuthProvider({ children }) {
     isLoggedIn,
     isAdmin,
     isShopkeeper,
-    isUser,
     hasRole,
     login,
     logout,
@@ -75,7 +71,6 @@ export function AuthProvider({ children }) {
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
-
 
 export function useAuth() {
   const ctx = useContext(AuthContext);

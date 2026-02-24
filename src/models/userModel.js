@@ -18,23 +18,19 @@ const userSchema = new mongoose.Schema(
     },
     isVerified: {
       type: Boolean,
-      default: false,
+      default: true, 
     },
-
     role: {
       type: String,
-      enum: ["user", "shopkeeper", "admin"],
-      default: "user",
+      enum: ["shopkeeper", "admin"],  
+      default: "shopkeeper",
     },
-
     isAdmin: {
       type: Boolean,
       default: false,
     },
-
     forgotPasswordToken: String,
     forgotPasswordTokenExpiry: Date,
-
     verifyToken: String,
     verifyTokenExpiry: Date,
   },
