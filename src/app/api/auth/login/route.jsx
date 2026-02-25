@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { connect } from "@/dbConfig/dbConfig";
 import User from "@/models/userModel";
+import ShopRequest from "@/models/ShopRequest";
 import bcryptjs from "bcryptjs";
 import jwt from "jsonwebtoken";
 
@@ -17,6 +18,36 @@ export async function POST(request) {
       );
     }
 
+    // ── Check if this email has a shop request that is pending or rejected ──
+    // This runs BEFORE looking up the User, because pending/rejected applicants
+    // have no User document yet — they submitted a ShopRequest only.
+    const shopRequest = await ShopRequest.findOne({ email }).sort({ createdAt: -1 });
+
+    if (shopRequest) {
+      if (shopRequest.status === "pending") {
+        return NextResponse.json(
+          {
+            error:
+              "Your seller application is still under review. You'll be able to log in once an admin approves it.",
+          },
+          { status: 403 }
+        );
+      }
+
+      if (shopRequest.status === "rejected") {
+        return NextResponse.json(
+          {
+            error:
+              "Your seller application was not approved. Please contact support for more information.",
+          },
+          { status: 403 }
+        );
+      }
+
+      // status === "approved" → a User was created, fall through to normal login
+    }
+
+    // ── Normal login flow ───────────────────────────────────────────────────
     const user = await User.findOne({ email });
     if (!user) {
       return NextResponse.json(
@@ -33,7 +64,7 @@ export async function POST(request) {
       );
     }
 
-    // // ── Check email verified ─────────────────────────────────────────────────
+    // // ── Check email verified ─────────────────────────────────────────────
     // if (!user.isVerified) {
     //   return NextResponse.json(
     //     { error: "Please verify your email before logging in" },
@@ -42,9 +73,9 @@ export async function POST(request) {
     // }
 
     const tokenData = {
-      id:   user._id,
+      id:    user._id,
       email: user.email,
-      role: user.role,      
+      role:  user.role,
     };
 
     const token = jwt.sign(tokenData, process.env.TOKEN_SECRET, {

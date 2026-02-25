@@ -50,7 +50,7 @@ export default function AdminDashboard() {
   const fetchAll = async () => {
     try {
       const [interests, orders] = await Promise.all([
-        axios.get("/api/shop-interest"),
+        axios.get("/api/admin/users"),
         axios.get("/api/checkout"),
       ]);
 

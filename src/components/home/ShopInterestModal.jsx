@@ -1,26 +1,30 @@
-// src/components/home/ShopInterestModal.jsx
 "use client";
 
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
-import { X, Store, CheckCircle } from "lucide-react";
+import { X, Store, CheckCircle, Eye, EyeOff } from "lucide-react";
 
 export default function ShopInterestModal({ isOpen, onClose }) {
   const [form, setForm] = useState({
-    fullName: "", email: "", phone: "", shopName: "", shopDescription: "",
+    fullName: "",
+    userName: "",
+    email: "",
+    phone: "",
+    password: "",
+    shopName: "",
+    shopDescription: "",
   });
-  const [isLoading, setIsLoading] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading]       = useState(false);
+  const [submitted, setSubmitted]       = useState(false);
 
-  // Lock body scroll when modal open
   useEffect(() => {
     if (isOpen) document.body.style.overflow = "hidden";
     else document.body.style.overflow = "";
     return () => { document.body.style.overflow = ""; };
   }, [isOpen]);
 
-  // Close on Escape key
   useEffect(() => {
     const handleKey = (e) => { if (e.key === "Escape") onClose(); };
     window.addEventListener("keydown", handleKey);
@@ -32,6 +36,10 @@ export default function ShopInterestModal({ isOpen, onClose }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (form.password.length < 6) {
+      toast.error("Password must be at least 6 characters.");
+      return;
+    }
     setIsLoading(true);
     try {
       await axios.post("/api/shop-interest", form);
@@ -45,8 +53,10 @@ export default function ShopInterestModal({ isOpen, onClose }) {
 
   const handleClose = () => {
     onClose();
-    // Reset after close animation
-    setTimeout(() => { setSubmitted(false); setForm({ fullName: "", email: "", phone: "", shopName: "", shopDescription: "" }); }, 300);
+    setTimeout(() => {
+      setSubmitted(false);
+      setForm({ fullName: "", userName: "", email: "", phone: "", password: "", shopName: "", shopDescription: "" });
+    }, 300);
   };
 
   if (!isOpen) return null;
@@ -86,7 +96,7 @@ export default function ShopInterestModal({ isOpen, onClose }) {
       >
         {/* Modal */}
         <div
-          className="modal-anim modal-font relative bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden"
+          className="modal-anim modal-font relative bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden max-h-[90vh] overflow-y-auto"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Top accent bar */}
@@ -110,7 +120,7 @@ export default function ShopInterestModal({ isOpen, onClose }) {
                 Request Received!
               </h3>
               <p className="text-stone-500 text-sm leading-relaxed mb-6 max-w-xs">
-                Thank you for your interest! Our team will review your application and get back to you at <strong>{form.email}</strong> shortly.
+                Thank you! Our team will review your application. Once approved, you can log in with the username and password you provided.
               </p>
               <button
                 onClick={handleClose}
@@ -132,13 +142,14 @@ export default function ShopInterestModal({ isOpen, onClose }) {
                     Open Your Shop
                   </h2>
                   <p className="text-stone-500 text-xs mt-1 leading-relaxed">
-                    Fill in your details and we'll reach out to get you set up as a seller.
+                    Fill in your details. Once approved, you'll log in with these credentials.
                   </p>
                 </div>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-3.5">
-                {/* Name + Email */}
+
+                {/* Full Name + Phone */}
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-[11px] font-semibold uppercase tracking-wide text-[#3a5a2a] mb-1.5">
@@ -164,6 +175,20 @@ export default function ShopInterestModal({ isOpen, onClose }) {
                   </div>
                 </div>
 
+                {/* Username */}
+                <div>
+                  <label className="block text-[11px] font-semibold uppercase tracking-wide text-[#3a5a2a] mb-1.5">
+                    Username * <span className="normal-case font-normal text-stone-400">(used to log in)</span>
+                  </label>
+                  <input
+                    className="modal-input"
+                    name="userName" type="text"
+                    placeholder="alihassan_shop"
+                    value={form.userName} onChange={handleChange} required
+                  />
+                </div>
+
+                {/* Email */}
                 <div>
                   <label className="block text-[11px] font-semibold uppercase tracking-wide text-[#3a5a2a] mb-1.5">
                     Email Address *
@@ -176,6 +201,30 @@ export default function ShopInterestModal({ isOpen, onClose }) {
                   />
                 </div>
 
+                {/* Password */}
+                <div>
+                  <label className="block text-[11px] font-semibold uppercase tracking-wide text-[#3a5a2a] mb-1.5">
+                    Password * <span className="normal-case font-normal text-stone-400">(min 6 characters)</span>
+                  </label>
+                  <div className="relative">
+                    <input
+                      className="modal-input pr-10"
+                      name="password"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Choose a secure password"
+                      value={form.password} onChange={handleChange} required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((v) => !v)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600"
+                    >
+                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Shop Name */}
                 <div>
                   <label className="block text-[11px] font-semibold uppercase tracking-wide text-[#3a5a2a] mb-1.5">
                     Shop Name *
@@ -188,6 +237,7 @@ export default function ShopInterestModal({ isOpen, onClose }) {
                   />
                 </div>
 
+                {/* Description */}
                 <div>
                   <label className="block text-[11px] font-semibold uppercase tracking-wide text-[#3a5a2a] mb-1.5">
                     What will you sell?
@@ -212,11 +262,11 @@ export default function ShopInterestModal({ isOpen, onClose }) {
                       <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full spinner inline-block" />
                       Submitting…
                     </>
-                  ) : "Submit Interest →"}
+                  ) : "Submit Application →"}
                 </button>
 
                 <p className="text-center text-xs text-stone-400">
-                  No account needed. We'll contact you directly.
+                  Your account will be created once our team approves your request.
                 </p>
               </form>
             </div>

@@ -1,75 +1,64 @@
-
 import { NextResponse } from "next/server";
+import bcrypt from "bcryptjs";
 import { connect } from "@/dbConfig/dbConfig";
-import ShopInterest from "@/models/ShopInterest";
-
-connect();
+import ShopRequest from "@/models/ShopRequest";
+import User from "@/models/userModel";
 
 export async function POST(request) {
   try {
-    const { fullName, email, phone, shopName, shopDescription } = await request.json();
+    await connect();
 
-    if (!fullName || !email || !shopName) {
+    const { fullName, userName, email, phone, password, shopName, shopDescription } =
+      await request.json();
+
+    // --- Validation ---
+    if (!fullName || !userName || !email || !password || !shopName) {
       return NextResponse.json(
-        { error: "Name, email and shop name are required" },
+        { error: "fullName, userName, email, password, and shopName are required." },
         { status: 400 }
       );
     }
 
-    const existing = await ShopInterest.findOne({ email });
-    if (existing) {
+    // Check if email or userName already exists in Users (already approved before)
+    const existingUser = await User.findOne({ $or: [{ email }, { userName }] });
+    if (existingUser) {
       return NextResponse.json(
-        { error: "You have already submitted an interest request with this email." },
+        { error: "An account with this email or username already exists." },
         { status: 409 }
       );
     }
 
-    const interest = await ShopInterest.create({
+    // Check if a pending/approved request already exists for this email
+    const existingRequest = await ShopRequest.findOne({
+      email,
+      status: { $in: ["pending", "approved"] },
+    });
+    if (existingRequest) {
+      return NextResponse.json(
+        { error: "A request with this email is already pending or approved." },
+        { status: 409 }
+      );
+    }
+
+    // Hash the password before storing
+    const hashedPassword = await bcrypt.hash(password, 12);
+
+    const shopRequest = await ShopRequest.create({
       fullName,
+      userName,
       email,
       phone,
+      password: hashedPassword,
       shopName,
       shopDescription,
     });
 
     return NextResponse.json(
-      { message: "Request submitted successfully!", success: true, id: interest._id },
+      { message: "Request submitted successfully.", id: shopRequest._id },
       { status: 201 }
     );
   } catch (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-}
-
-export async function GET(request) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const status = searchParams.get("status");
-    const filter = status ? { status } : {};
-
-    const interests = await ShopInterest.find(filter).sort({ createdAt: -1 });
-    return NextResponse.json({ interests });
-  } catch (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-}
-
-export async function PATCH(request) {
-  try {
-    const { id, status, adminNotes } = await request.json();
-
-    const interest = await ShopInterest.findByIdAndUpdate(
-      id,
-      { status, ...(adminNotes && { adminNotes }) },
-      { new: true }
-    );
-
-    if (!interest) {
-      return NextResponse.json({ error: "Request not found" }, { status: 404 });
-    }
-
-    return NextResponse.json({ message: "Updated successfully", interest });
-  } catch (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("shop-interest POST error:", error);
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 }

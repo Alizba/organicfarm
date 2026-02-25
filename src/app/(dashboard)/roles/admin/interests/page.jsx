@@ -18,19 +18,19 @@ const css = `
 `;
 
 const STATUS_MAP = {
-  new:       { bg: "#eff6ff", color: "#3b82f6",  label: "New"       },
-  contacted: { bg: "#fff8e1", color: "#d97706",  label: "Contacted" },
-  approved:  { bg: "#ecfdf5", color: "#059669",  label: "Approved"  },
-  rejected:  { bg: "#fef2f2", color: "#dc2626",  label: "Rejected"  },
+  pending:  { bg: "#fff8e1", color: "#d97706", label: "Pending"  },
+  approved: { bg: "#ecfdf5", color: "#059669", label: "Approved" },
+  rejected: { bg: "#fef2f2", color: "#dc2626", label: "Rejected" },
 };
 
 export default function AdminInterestsPage() {
   const { user, loading, logout } = useAuth();
   const router = useRouter();
-  const [interests, setInterests] = useState([]);
-  const [fetching, setFetching] = useState(true);
-  const [selected, setSelected] = useState(null); // detail modal
+  const [interests, setInterests]   = useState([]);
+  const [fetching, setFetching]     = useState(true);
+  const [selected, setSelected]     = useState(null);
   const [updatingId, setUpdatingId] = useState(null);
+  const [error, setError]           = useState(null);
 
   useEffect(() => {
     if (!loading && (!user || user.role !== "admin")) router.replace("/login");
@@ -40,27 +40,34 @@ export default function AdminInterestsPage() {
     if (user?.role === "admin") fetchInterests();
   }, [user]);
 
+  // ── GET from /api/admin/users ──────────────────────────────────────────────
   const fetchInterests = async () => {
     try {
-      const { data } = await axios.get("/api/shop-interest");
-      setInterests(data.interests || []);
+      const { data } = await axios.get("/api/admin/users");
+      setInterests(data.requests || []);
     } catch (e) {
       console.error(e);
+      setError("Failed to load requests.");
     } finally {
       setFetching(false);
     }
   };
 
-  const updateStatus = async (id, status) => {
+  // ── PATCH to /api/admin/users with { requestId, action } ──────────────────
+  // action must be "approved" or "rejected" — those are the only two actions
+  const updateStatus = async (id, action) => {
+    if (!["approved", "rejected"].includes(action)) return;
     setUpdatingId(id);
     try {
-      await axios.patch("/api/shop-interest", { id, status });
+      await axios.patch("/api/admin/users", { requestId: id, action });
+      // Update local state immediately so UI reflects change
       setInterests((prev) =>
-        prev.map((i) => (i._id === id ? { ...i, status } : i))
+        prev.map((i) => (i._id === id ? { ...i, status: action } : i))
       );
-      if (selected?._id === id) setSelected((prev) => ({ ...prev, status }));
+      if (selected?._id === id) setSelected((prev) => ({ ...prev, status: action }));
     } catch (e) {
       console.error(e);
+      alert(e?.response?.data?.error || "Something went wrong.");
     } finally {
       setUpdatingId(null);
     }
@@ -69,11 +76,10 @@ export default function AdminInterestsPage() {
   if (loading || !user) return <Loader />;
 
   const counts = {
-    all:       interests.length,
-    new:       interests.filter((i) => i.status === "new").length,
-    contacted: interests.filter((i) => i.status === "contacted").length,
-    approved:  interests.filter((i) => i.status === "approved").length,
-    rejected:  interests.filter((i) => i.status === "rejected").length,
+    all:      interests.length,
+    pending:  interests.filter((i) => i.status === "pending").length,
+    approved: interests.filter((i) => i.status === "approved").length,
+    rejected: interests.filter((i) => i.status === "rejected").length,
   };
 
   return (
@@ -91,7 +97,6 @@ export default function AdminInterestsPage() {
           <div style={{ display: "flex", alignItems: "center", gap: 32 }}>
             <span style={{ fontFamily: "'Instrument Serif', serif", fontSize: 20, color: "#0f172a" }}>Admin</span>
             <Link href="/roles/admin" className="nav-link" style={{ fontSize: 13, color: "#64748b", textDecoration: "none" }}>Overview</Link>
-            <Link href="/roles/admin/request" className="nav-link" style={{ fontSize: 13, color: "#64748b", textDecoration: "none" }}>Shop Requests</Link>
             <Link href="/roles/admin/interests" className="nav-link" style={{ fontSize: 13, fontWeight: 600, color: "#0f172a", textDecoration: "none" }}>Sell Interests</Link>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
@@ -109,10 +114,10 @@ export default function AdminInterestsPage() {
           {/* Header */}
           <div className="fade-in" style={{ marginBottom: 32 }}>
             <h1 style={{ fontFamily: "'Instrument Serif', serif", fontSize: 36, color: "#0f172a", fontWeight: 400 }}>
-              Seller Interest Requests
+              Seller Applications
             </h1>
             <p style={{ color: "#64748b", marginTop: 6, fontSize: 15 }}>
-              People who submitted interest via the "Want to Sell?" form.
+              Review and approve or reject seller applications. Approving creates their account.
             </p>
           </div>
 
@@ -125,12 +130,20 @@ export default function AdminInterestsPage() {
                 color: "#64748b", fontWeight: 500,
               }}>
                 <span style={{ textTransform: "capitalize" }}>{key}</span>
-                <span style={{ marginLeft: 8, background: "#f1f5f9", borderRadius: 99, padding: "1px 8px", fontSize: 12, fontWeight: 700, color: "#0f172a" }}>
-                  {val}
-                </span>
+                <span style={{
+                  marginLeft: 8, background: "#f1f5f9", borderRadius: 99,
+                  padding: "1px 8px", fontSize: 12, fontWeight: 700, color: "#0f172a",
+                }}>{val}</span>
               </div>
             ))}
           </div>
+
+          {/* Error */}
+          {error && (
+            <div style={{ background: "#fef2f2", color: "#dc2626", padding: "12px 16px", borderRadius: 8, marginBottom: 20, fontSize: 14 }}>
+              {error}
+            </div>
+          )}
 
           {/* Table */}
           <div className="fade-in" style={{
@@ -142,13 +155,13 @@ export default function AdminInterestsPage() {
               <div style={{ padding: 40, textAlign: "center", color: "#94a3b8" }}>Loading...</div>
             ) : interests.length === 0 ? (
               <div style={{ padding: 60, textAlign: "center", color: "#94a3b8", fontSize: 14 }}>
-                No interest requests yet.
+                No applications yet.
               </div>
             ) : (
               <table style={{ width: "100%", borderCollapse: "collapse" }}>
                 <thead>
                   <tr style={{ borderBottom: "1px solid #f1f5f9" }}>
-                    {["Name", "Email", "Shop Name", "Submitted", "Status", "Actions"].map((h) => (
+                    {["Name", "Username", "Email", "Shop Name", "Submitted", "Status", "Actions"].map((h) => (
                       <th key={h} style={{
                         padding: "12px 20px", textAlign: "left",
                         fontSize: 11, fontWeight: 700, color: "#94a3b8",
@@ -159,7 +172,9 @@ export default function AdminInterestsPage() {
                 </thead>
                 <tbody>
                   {interests.map((item, i) => {
-                    const s = STATUS_MAP[item.status] || STATUS_MAP.new;
+                    const s = STATUS_MAP[item.status] || STATUS_MAP.pending;
+                    const isPending = item.status === "pending";
+                    const isUpdating = updatingId === item._id;
                     return (
                       <tr key={item._id} className="row" style={{
                         borderBottom: i < interests.length - 1 ? "1px solid #f8fafc" : "none",
@@ -167,6 +182,9 @@ export default function AdminInterestsPage() {
                       }}>
                         <td style={{ padding: "14px 20px", fontSize: 14, fontWeight: 600, color: "#0f172a" }}>
                           {item.fullName}
+                        </td>
+                        <td style={{ padding: "14px 20px", fontSize: 13, color: "#64748b" }}>
+                          @{item.userName}
                         </td>
                         <td style={{ padding: "14px 20px", fontSize: 13, color: "#64748b" }}>
                           {item.email}
@@ -194,52 +212,33 @@ export default function AdminInterestsPage() {
                                 padding: "6px 12px", fontSize: 12,
                                 fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
                               }}
-                            >
-                              View
-                            </button>
-                            {item.status === "new" && (
-                              <button
-                                onClick={() => updateStatus(item._id, "contacted")}
-                                disabled={updatingId === item._id}
-                                style={{
-                                  background: "#fff8e1", color: "#d97706",
-                                  border: "none", borderRadius: 7,
-                                  padding: "6px 12px", fontSize: 12,
-                                  fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
-                                  opacity: updatingId === item._id ? 0.6 : 1,
-                                }}
-                              >
-                                Mark Contacted
-                              </button>
-                            )}
-                            {["new", "contacted"].includes(item.status) && (
+                            >View</button>
+
+                            {isPending && (
                               <>
                                 <button
                                   onClick={() => updateStatus(item._id, "approved")}
-                                  disabled={updatingId === item._id}
+                                  disabled={isUpdating}
                                   style={{
                                     background: "#ecfdf5", color: "#059669",
                                     border: "none", borderRadius: 7,
                                     padding: "6px 12px", fontSize: 12,
                                     fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
-                                    opacity: updatingId === item._id ? 0.6 : 1,
+                                    opacity: isUpdating ? 0.6 : 1,
                                   }}
-                                >
-                                  Approve
-                                </button>
+                                >{isUpdating ? "…" : "Approve"}</button>
+
                                 <button
                                   onClick={() => updateStatus(item._id, "rejected")}
-                                  disabled={updatingId === item._id}
+                                  disabled={isUpdating}
                                   style={{
                                     background: "#fef2f2", color: "#dc2626",
                                     border: "none", borderRadius: 7,
                                     padding: "6px 12px", fontSize: 12,
                                     fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
-                                    opacity: updatingId === item._id ? 0.6 : 1,
+                                    opacity: isUpdating ? 0.6 : 1,
                                   }}
-                                >
-                                  Reject
-                                </button>
+                                >{isUpdating ? "…" : "Reject"}</button>
                               </>
                             )}
                           </div>
@@ -282,6 +281,7 @@ export default function AdminInterestsPage() {
             </div>
 
             {[
+              { label: "Username",    value: `@${selected.userName}` },
               { label: "Email",       value: selected.email },
               { label: "Phone",       value: selected.phone || "—" },
               { label: "Description", value: selected.shopDescription || "—" },
@@ -296,19 +296,21 @@ export default function AdminInterestsPage() {
               </div>
             ))}
 
-            {/* Quick actions inside modal */}
-            {["new", "contacted"].includes(selected.status) && (
+            {selected.status === "pending" && (
               <div style={{ display: "flex", gap: 8, marginTop: 20, borderTop: "1px solid #f1f5f9", paddingTop: 20 }}>
-                {selected.status === "new" && (
-                  <button onClick={() => updateStatus(selected._id, "contacted")} style={{ flex: 1, background: "#fff8e1", color: "#d97706", border: "none", borderRadius: 8, padding: "10px", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
-                    Mark Contacted
-                  </button>
-                )}
-                <button onClick={() => updateStatus(selected._id, "approved")} style={{ flex: 1, background: "#ecfdf5", color: "#059669", border: "none", borderRadius: 8, padding: "10px", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
-                  Approve
+                <button
+                  onClick={() => updateStatus(selected._id, "approved")}
+                  disabled={updatingId === selected._id}
+                  style={{ flex: 1, background: "#ecfdf5", color: "#059669", border: "none", borderRadius: 8, padding: "10px", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}
+                >
+                  {updatingId === selected._id ? "Approving…" : "✓ Approve"}
                 </button>
-                <button onClick={() => updateStatus(selected._id, "rejected")} style={{ flex: 1, background: "#fef2f2", color: "#dc2626", border: "none", borderRadius: 8, padding: "10px", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
-                  Reject
+                <button
+                  onClick={() => updateStatus(selected._id, "rejected")}
+                  disabled={updatingId === selected._id}
+                  style={{ flex: 1, background: "#fef2f2", color: "#dc2626", border: "none", borderRadius: 8, padding: "10px", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}
+                >
+                  {updatingId === selected._id ? "Rejecting…" : "✕ Reject"}
                 </button>
               </div>
             )}
