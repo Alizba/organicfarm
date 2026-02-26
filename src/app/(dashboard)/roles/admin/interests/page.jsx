@@ -1,4 +1,3 @@
-// src/app/(dashboard)/roles/admin/interests/page.jsx
 "use client";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -40,7 +39,6 @@ export default function AdminInterestsPage() {
     if (user?.role === "admin") fetchInterests();
   }, [user]);
 
-  // ── GET from /api/admin/users ──────────────────────────────────────────────
   const fetchInterests = async () => {
     try {
       const { data } = await axios.get("/api/admin/users");

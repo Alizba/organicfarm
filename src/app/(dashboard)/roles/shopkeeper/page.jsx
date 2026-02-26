@@ -10,8 +10,10 @@ const css = `
   body { font-family: 'DM Sans', sans-serif; background: #fafaf9; }
   .fade-in { animation: fadeUp 0.4s ease both; }
   @keyframes fadeUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
-  .feature-card { transition: all 0.2s ease; cursor: default; }
+  .feature-card { transition: all 0.2s ease; cursor: pointer; text-decoration: none; display: block; }
   .feature-card:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,0,0,0.08) !important; }
+  .feature-card:hover .card-arrow { opacity: 1 !important; transform: translateX(3px); }
+  .card-arrow { transition: all 0.2s ease; }
   .nav-link:hover { color: #0f172a !important; }
   .btn-primary:hover { background: #1e293b !important; }
   .d1 { animation-delay: 0.05s; }
@@ -36,22 +38,28 @@ export default function ShopkeeperDashboard() {
       icon: "🏪",
       title: "My Shop",
       desc: "Manage your shop profile, description, and settings.",
-      tag: "Coming soon",
+      href: "/roles/shopkeeper/shop",        // ← coming soon, no page needed yet
+      comingSoon: false,
       delay: "d1",
+      accent: "#6366f1",
     },
     {
       icon: "📦",
       title: "Products",
       desc: "Add, edit, and manage your product listings.",
-      tag: "Coming soon",
+      href: "/roles/shopkeeper/products",    // ← will create this page
+      comingSoon: false,
       delay: "d2",
+      accent: "#0f172a",
     },
     {
       icon: "📊",
       title: "Analytics",
       desc: "Track your sales, visits, and performance metrics.",
-      tag: "Coming soon",
+      href: "/roles/shopkeeper/analytics",   // ← will create this page
+      comingSoon: false,
       delay: "d3",
+      accent: "#10b981",
     },
   ];
 
@@ -71,7 +79,9 @@ export default function ShopkeeperDashboard() {
             <span style={{ fontFamily: "'Instrument Serif', serif", fontSize: 20, color: "#0f172a" }}>
               Shopkeeper
             </span>
-            <Link href="/dashboard/shopkeeper" className="nav-link" style={{ fontSize: 13, fontWeight: 600, color: "#0f172a", textDecoration: "none" }}>Dashboard</Link>
+            <Link href="/roles/shopkeeper" className="nav-link" style={{ fontSize: 13, fontWeight: 600, color: "#0f172a", textDecoration: "none" }}>Dashboard</Link>
+            <Link href="/roles/shopkeeper/products" className="nav-link" style={{ fontSize: 13, fontWeight: 500, color: "#64748b", textDecoration: "none" }}>Products</Link>
+            <Link href="/roles/shopkeeper/analytics" className="nav-link" style={{ fontSize: 13, fontWeight: 500, color: "#64748b", textDecoration: "none" }}>Analytics</Link>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
             <div style={{
@@ -124,23 +134,35 @@ export default function ShopkeeperDashboard() {
             </div>
           </div>
 
-          {/* Feature Cards */}
+          {/* Feature Cards — now clickable Links */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
             {features.map((f) => (
-              <div key={f.title} className={`fade-in feature-card ${f.delay}`} style={{
-                background: "#fff", border: "1px solid #e5e7eb",
-                borderRadius: 12, padding: 28,
-                boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
-              }}>
+              <Link
+                key={f.title}
+                href={f.comingSoon ? "#" : f.href}
+                className={`fade-in feature-card ${f.delay}`}
+                style={{
+                  background: "#fff", border: "1px solid #e5e7eb",
+                  borderRadius: 12, padding: 28,
+                  boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+                  borderTop: `3px solid ${f.accent}`,
+                  opacity: f.comingSoon ? 0.7 : 1,
+                }}
+              >
                 <div style={{ fontSize: 32, marginBottom: 16 }}>{f.icon}</div>
-                <div style={{ fontWeight: 700, fontSize: 15, color: "#0f172a", marginBottom: 8 }}>{f.title}</div>
-                <div style={{ fontSize: 13, color: "#64748b", lineHeight: 1.6, marginBottom: 16 }}>{f.desc}</div>
-                <span style={{
-                  background: "#f1f5f9", color: "#94a3b8",
-                  fontSize: 11, fontWeight: 700, padding: "4px 10px",
-                  borderRadius: 99, letterSpacing: 0.5,
-                }}>{f.tag}</span>
-              </div>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                  <div style={{ fontWeight: 700, fontSize: 15, color: "#0f172a" }}>{f.title}</div>
+                  {f.comingSoon ? (
+                    <span style={{
+                      fontSize: 10, fontWeight: 700, color: "#94a3b8",
+                      background: "#f1f5f9", padding: "3px 8px", borderRadius: 99,
+                    }}>Soon</span>
+                  ) : (
+                    <span className="card-arrow" style={{ fontSize: 16, color: f.accent, opacity: 0 }}>→</span>
+                  )}
+                </div>
+                <div style={{ fontSize: 13, color: "#64748b", lineHeight: 1.6 }}>{f.desc}</div>
+              </Link>
             ))}
           </div>
 
@@ -157,8 +179,7 @@ export default function ShopkeeperDashboard() {
               </div>
               <div style={{ fontSize: 13, color: "#64748b", lineHeight: 1.7 }}>
                 Your role has been upgraded from <strong>user</strong> to <strong>shopkeeper</strong>.
-                This is confirmed in your account and a new session token was issued on your last login.
-                Full shop management features are coming soon.
+                Click <strong>Products</strong> to start adding items, or visit <strong>Analytics</strong> to track your performance.
               </div>
             </div>
           </div>

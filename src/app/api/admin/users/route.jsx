@@ -45,7 +45,6 @@ export async function PATCH(request) {
       return NextResponse.json({ message: "Request rejected." });
     }
 
-    // --- APPROVE: create the User account using stored (hashed) password ---
 
     // Guard against duplicate email/userName
     const existing = await User.findOne({
@@ -64,6 +63,7 @@ export async function PATCH(request) {
       password:   shopRequest.password, // already hashed
       role:       "shopkeeper",
       isVerified: true,
+      isAdmin: false,
     });
 
     shopRequest.status       = "approved";

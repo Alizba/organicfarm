@@ -18,11 +18,11 @@ const userSchema = new mongoose.Schema(
     },
     isVerified: {
       type: Boolean,
-      default: true, 
+      default: true,
     },
     role: {
       type: String,
-      enum: ["shopkeeper", "admin"],  
+      enum: ["shopkeeper", "admin"],
       default: "shopkeeper",
     },
     isAdmin: {
@@ -37,10 +37,6 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-userSchema.pre("save", function (next) {
-  this.isAdmin = this.role === "admin";
-  next();
-});
 
 const User = mongoose.models.User || mongoose.model("User", userSchema);
 

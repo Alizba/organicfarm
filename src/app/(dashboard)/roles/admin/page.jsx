@@ -25,18 +25,19 @@ const css = `
 `;
 
 const NAV = [
-  { label: "Overview",      href: "/roles/admin",           active: true  },
+  { label: "Overview",       href: "/roles/admin",           active: true  },
   { label: "Sell Interests", href: "/roles/admin/interests", active: false },
-  { label: "Orders",        href: "/roles/admin/orders",     active: false },
+  { label: "Orders",         href: "/roles/admin/orders",    active: false },
 ];
 
 export default function AdminDashboard() {
   const { user, loading, logout } = useAuth();
   const router = useRouter();
 
-  const [stats, setStats]                   = useState({ interests: 0, newInterests: 0, orders: 0, pendingOrders: 0, revenue: 0 });
+  const [stats, setStats]                     = useState({ interests: 0, pendingInterests: 0, orders: 0, pendingOrders: 0, revenue: 0 });
   const [recentInterests, setRecentInterests] = useState([]);
   const [recentOrders, setRecentOrders]       = useState([]);
+  const [shopRevenues, setShopRevenues]       = useState([]);   // ← per-shop revenue
   const [fetching, setFetching]               = useState(true);
 
   useEffect(() => {
@@ -49,28 +50,45 @@ export default function AdminDashboard() {
 
   const fetchAll = async () => {
     try {
-      const [interests, orders] = await Promise.all([
+      const [interestsRes, ordersRes] = await Promise.all([
         axios.get("/api/admin/users"),
         axios.get("/api/checkout"),
       ]);
 
-      const interestList = interests.data.interests || [];
-      const orderList    = orders.data.orders || [];
+      // ✅ FIX 1: API returns `requests`, not `interests`
+      const interestList = interestsRes.data.requests || [];
+      const orderList    = ordersRes.data.orders || [];
 
-      const revenue = orderList
+      // Total revenue (non-cancelled orders)
+      const totalRevenue = orderList
         .filter((o) => o.status !== "cancelled")
         .reduce((sum, o) => sum + (o.total || 0), 0);
 
+      // ✅ FIX 2: Per-shop revenue grouped by shopkeeper
+      const revenueByShop = {};
+      orderList
+        .filter((o) => o.status !== "cancelled")
+        .forEach((o) => {
+          // Try to group by shopName or sellerId — adjust field name to match your Order model
+          const shopKey = o.shopName || o.shopkeeper?.shopName || o.seller?.shopName || "Unknown Shop";
+          revenueByShop[shopKey] = (revenueByShop[shopKey] || 0) + (o.total || 0);
+        });
+
+      const shopRevenueList = Object.entries(revenueByShop)
+        .map(([shopName, revenue]) => ({ shopName, revenue }))
+        .sort((a, b) => b.revenue - a.revenue);   // highest revenue first
+
       setStats({
-        interests:    interestList.length,
-        newInterests: interestList.filter((i) => i.status === "new").length,
-        orders:       orderList.length,
-        pendingOrders: orderList.filter((o) => o.status === "pending").length,
-        revenue,
+        interests:        interestList.length,
+        pendingInterests: interestList.filter((i) => i.status === "pending").length,
+        orders:           orderList.length,
+        pendingOrders:    orderList.filter((o) => o.status === "pending").length,
+        revenue:          totalRevenue,
       });
 
       setRecentInterests(interestList.slice(0, 5));
       setRecentOrders(orderList.slice(0, 5));
+      setShopRevenues(shopRevenueList);
     } catch (e) {
       console.error(e);
     } finally {
@@ -81,11 +99,11 @@ export default function AdminDashboard() {
   if (loading || !user) return <Loader />;
 
   const statCards = [
-    { label: "Sell Interests",  value: stats.interests,     accent: "#6366f1", icon: "🏪" },
-    { label: "New Interests",   value: stats.newInterests,  accent: "#f59e0b", icon: "✨" },
-    { label: "Total Orders",    value: stats.orders,        accent: "#0f172a", icon: "📦" },
-    { label: "Pending Orders",  value: stats.pendingOrders, accent: "#ef4444", icon: "⏳" },
-    { label: "Total Revenue",   value: `Rs. ${stats.revenue.toLocaleString()}`, accent: "#10b981", icon: "💰" },
+    { label: "Sell Interests",   value: stats.interests,        accent: "#6366f1", icon: "🏪" },
+    { label: "Pending Interests",value: stats.pendingInterests, accent: "#f59e0b", icon: "⏰" },
+    { label: "Total Orders",     value: stats.orders,           accent: "#0f172a", icon: "📦" },
+    { label: "Pending Orders",   value: stats.pendingOrders,    accent: "#ef4444", icon: "⏳" },
+    { label: "Total Revenue",    value: `Rs. ${stats.revenue.toLocaleString()}`, accent: "#10b981", icon: "💰" },
   ];
 
   return (
@@ -156,8 +174,8 @@ export default function AdminDashboard() {
             ))}
           </div>
 
-          {/* Two column panels */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
+          {/* Three column panels */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, marginBottom: 24 }}>
 
             {/* Recent Sell Interests */}
             <div className="fade-in" style={{
@@ -172,9 +190,9 @@ export default function AdminDashboard() {
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                   <span style={{ fontSize: 16 }}>🏪</span>
                   <span style={{ fontWeight: 700, fontSize: 14, color: "#0f172a" }}>Sell Interests</span>
-                  {stats.newInterests > 0 && (
+                  {stats.pendingInterests > 0 && (
                     <span style={{ background: "#6366f1", color: "#fff", fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 99 }}>
-                      {stats.newInterests} new
+                      {stats.pendingInterests} pending
                     </span>
                   )}
                 </div>
@@ -254,8 +272,68 @@ export default function AdminDashboard() {
                 ))
               )}
             </div>
-
           </div>
+
+          {/* ✅ NEW: Per-Shop Revenue Panel */}
+          <div className="fade-in" style={{
+            background: "#fff", border: "1px solid #e5e7eb",
+            borderRadius: 12, overflow: "hidden",
+            boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+          }}>
+            <div style={{
+              padding: "18px 24px", borderBottom: "1px solid #f1f5f9",
+              display: "flex", justifyContent: "space-between", alignItems: "center",
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <span style={{ fontSize: 16 }}>💰</span>
+                <span style={{ fontWeight: 700, fontSize: 14, color: "#0f172a" }}>Revenue by Shop</span>
+              </div>
+              <span style={{ fontSize: 12, color: "#94a3b8" }}>Excludes cancelled orders</span>
+            </div>
+
+            {fetching ? (
+              <div style={{ padding: 40, textAlign: "center", color: "#94a3b8", fontSize: 13 }}>Loading...</div>
+            ) : shopRevenues.length === 0 ? (
+              <div style={{ padding: 40, textAlign: "center", color: "#94a3b8", fontSize: 13 }}>No revenue data yet</div>
+            ) : (
+              <div style={{ padding: "8px 0" }}>
+                {shopRevenues.map((s, i) => {
+                  const maxRevenue = shopRevenues[0].revenue;
+                  const pct = maxRevenue > 0 ? (s.revenue / maxRevenue) * 100 : 0;
+                  return (
+                    <div key={s.shopName} className="row" style={{
+                      padding: "12px 24px",
+                      borderBottom: i < shopRevenues.length - 1 ? "1px solid #f8fafc" : "none",
+                      background: "#fff", transition: "background 0.15s",
+                    }}>
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          <span style={{
+                            width: 22, height: 22, borderRadius: "50%",
+                            background: "#f1f5f9", fontSize: 11, fontWeight: 700,
+                            color: "#64748b", display: "flex", alignItems: "center", justifyContent: "center",
+                          }}>{i + 1}</span>
+                          <span style={{ fontWeight: 600, fontSize: 13, color: "#0f172a" }}>{s.shopName}</span>
+                        </div>
+                        <span style={{ fontWeight: 700, fontSize: 13, color: "#10b981" }}>
+                          Rs. {s.revenue.toLocaleString()}
+                        </span>
+                      </div>
+                      {/* Progress bar */}
+                      <div style={{ height: 4, background: "#f1f5f9", borderRadius: 99, overflow: "hidden" }}>
+                        <div style={{
+                          height: "100%", borderRadius: 99,
+                          background: "linear-gradient(90deg, #10b981, #34d399)",
+                          width: `${pct}%`, transition: "width 0.6s ease",
+                        }} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
         </div>
       </div>
     </>
@@ -264,23 +342,22 @@ export default function AdminDashboard() {
 
 function InterestBadge({ status }) {
   const map = {
-    new:       { bg: "#eff6ff", color: "#3b82f6",  label: "New"       },
-    contacted: { bg: "#fff8e1", color: "#d97706",  label: "Contacted" },
-    approved:  { bg: "#ecfdf5", color: "#059669",  label: "Approved"  },
-    rejected:  { bg: "#fef2f2", color: "#dc2626",  label: "Rejected"  },
+    pending:  { bg: "#fff8e1", color: "#d97706", label: "Pending"  },
+    approved: { bg: "#ecfdf5", color: "#059669", label: "Approved" },
+    rejected: { bg: "#fef2f2", color: "#dc2626", label: "Rejected" },
   };
-  const s = map[status] || map.new;
+  const s = map[status] || map.pending;
   return <Badge bg={s.bg} color={s.color} label={s.label} />;
 }
 
 function OrderBadge({ status }) {
   const map = {
-    pending:    { bg: "#fff8e1", color: "#d97706",  label: "Pending"    },
-    confirmed:  { bg: "#eff6ff", color: "#3b82f6",  label: "Confirmed"  },
-    processing: { bg: "#f5f3ff", color: "#7c3aed",  label: "Processing" },
-    shipped:    { bg: "#ecfeff", color: "#0891b2",  label: "Shipped"    },
-    delivered:  { bg: "#ecfdf5", color: "#059669",  label: "Delivered"  },
-    cancelled:  { bg: "#fef2f2", color: "#dc2626",  label: "Cancelled"  },
+    pending:    { bg: "#fff8e1", color: "#d97706", label: "Pending"    },
+    confirmed:  { bg: "#eff6ff", color: "#3b82f6", label: "Confirmed"  },
+    processing: { bg: "#f5f3ff", color: "#7c3aed", label: "Processing" },
+    shipped:    { bg: "#ecfeff", color: "#0891b2", label: "Shipped"    },
+    delivered:  { bg: "#ecfdf5", color: "#059669", label: "Delivered"  },
+    cancelled:  { bg: "#fef2f2", color: "#dc2626", label: "Cancelled"  },
   };
   const s = map[status] || map.pending;
   return <Badge bg={s.bg} color={s.color} label={s.label} />;

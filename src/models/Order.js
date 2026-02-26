@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 const orderItemSchema = new mongoose.Schema({
-  productId: { type: String },        
+  productId: { type: String },
   name:      { type: String, required: true },
   price:     { type: Number, required: true },
   quantity:  { type: Number, required: true, min: 1 },
@@ -33,9 +33,9 @@ const orderSchema = new mongoose.Schema(
       },
     },
 
-    subtotal:      { type: Number, required: true },
-    deliveryFee:   { type: Number, default: 0 },
-    total:         { type: Number, required: true },
+    subtotal:    { type: Number, required: true },
+    deliveryFee: { type: Number, default: 0 },
+    total:       { type: Number, required: true },
 
     status: {
       type: String,
@@ -49,7 +49,18 @@ const orderSchema = new mongoose.Schema(
       default: "cod",
     },
 
-    notes: { type: String }, 
+    notes: { type: String },
+
+    shopkeeper: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,   
+    },
+
+    shopName: {
+      type: String,
+      default: null,
+    },
   },
   { timestamps: true }
 );

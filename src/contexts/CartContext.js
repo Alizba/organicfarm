@@ -14,7 +14,9 @@ export const CartProvider = ({ children }) => {
     return [];
   });
 
-  const [orderSuccess, setOrderSuccess] = useState(null); 
+  const [orderSuccess, setOrderSuccess]   = useState(null);  // first orderId (backwards compat)
+  const [orderIds, setOrderIds]           = useState([]);     // ✅ all order IDs (split orders)
+  const [orderCount, setOrderCount]       = useState(0);      // ✅ how many shops order was split into
 
   useEffect(() => {
     localStorage.setItem("cart", JSON.stringify(cart));
@@ -51,16 +53,13 @@ export const CartProvider = ({ children }) => {
   const cartTotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
-  /**
-   * @param {object} checkoutData
-   */
   const checkout = async (checkoutData) => {
     const DELIVERY_FEE = cartTotal >= 2000 ? 0 : 150;
 
     const payload = {
       ...checkoutData,
       items: cart.map((item) => ({
-        productId: item.id,
+        productId: item.id,      
         name:      item.name,
         price:     item.price,
         quantity:  item.quantity,
@@ -72,8 +71,13 @@ export const CartProvider = ({ children }) => {
     };
 
     const { data } = await axios.post("/api/checkout", payload);
+
     clearCart();
-    setOrderSuccess(data.orderId);
+
+    setOrderSuccess(data.orderId);              
+    setOrderIds(data.orderIds || [data.orderId]);
+    setOrderCount(data.orderCount || 1);
+
     return data;
   };
 
@@ -84,6 +88,8 @@ export const CartProvider = ({ children }) => {
         cartTotal,
         cartCount,
         orderSuccess,
+        orderIds,      
+        orderCount,   
         addToCart,
         removeFromCart,
         updateQuantity,
