@@ -24,10 +24,9 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
-  useEffect(() => {
-    fetchUser();
-  }, [fetchUser]);
+  useEffect(() => { fetchUser(); }, [fetchUser]);
 
+  // ── Login ────────────────────────────────────────────────────────────────
   const login = async (email, password) => {
     setError(null);
     try {
@@ -41,6 +40,25 @@ export function AuthProvider({ children }) {
     }
   };
 
+  // ── Register (customer self-signup) ──────────────────────────────────────
+  // Creates account then immediately logs in so user can proceed to checkout
+  const register = async (username, email, password) => {
+    setError(null);
+    try {
+      // 1. Create account
+      await axios.post("/api/auth/signup", { username, email, password });
+
+      // 2. Auto-login right after
+      const loginResult = await login(email, password);
+      return loginResult;
+    } catch (err) {
+      const msg = err.response?.data?.error || "Registration failed";
+      setError(msg);
+      return { success: false, error: msg };
+    }
+  };
+
+  // ── Logout ───────────────────────────────────────────────────────────────
   const logout = async () => {
     try {
       await axios.get("/api/auth/logout");
@@ -53,23 +71,19 @@ export function AuthProvider({ children }) {
   const isAdmin      = user?.role === "admin";
   const isShopkeeper = user?.role === "shopkeeper";
   const isLoggedIn   = !!user;
+  const hasRole      = (...roles) => roles.includes(user?.role);
 
-  const hasRole = (...roles) => roles.includes(user?.role);
-
-  const value = {
-    user,
-    loading,
-    error,
-    isLoggedIn,
-    isAdmin,
-    isShopkeeper,
-    hasRole,
-    login,
-    logout,
-    refetchUser: fetchUser,
-  };
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={{
+      user, loading, error,
+      isLoggedIn, isAdmin, isShopkeeper,
+      hasRole, login, logout,
+      register,       // ✅ new
+      refetchUser: fetchUser,
+    }}>
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
 export function useAuth() {

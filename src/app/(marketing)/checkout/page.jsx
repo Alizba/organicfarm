@@ -1,375 +1,330 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useCart } from "@/contexts/CartContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { toast } from "react-hot-toast";
-import { Leaf, CheckCircle, ArrowLeft } from "lucide-react";
+import Image from "next/image";
+import toast from "react-hot-toast";
+import AuthModal from "@/components/auth/AuthModal";
 
 export default function CheckoutPage() {
   const { cart, cartTotal, checkout, orderSuccess } = useCart();
+  const { user, isLoggedIn } = useAuth();
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
 
   const DELIVERY_FEE = cartTotal >= 2000 ? 0 : 150;
-  const total = cartTotal + DELIVERY_FEE;
+  const grandTotal   = cartTotal + DELIVERY_FEE;
+
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [pendingSubmit, setPendingSubmit] = useState(false); // retry after login
+  const [loading, setLoading] = useState(false);
 
   const [form, setForm] = useState({
-    fullName:      "",
-    email:         "",
-    phone:         "",
-    street:        "",
-    city:          "",
-    state:         "",
-    zip:           "",
-    paymentMethod: "cod",
-    notes:         "",
+    fullName: "", email: "", phone: "",
+    street: "", city: "", province: "", zip: "",
+    paymentMethod: "cod", notes: "",
   });
 
-  const handleChange = (e) => {
+  // ── Auto-fill email from logged-in user ──────────────────────────────────
+  useEffect(() => {
+    if (user) {
+      setForm((prev) => ({
+        ...prev,
+        email:    prev.email    || user.email    || "",
+        fullName: prev.fullName || user.userName || "",
+      }));
+    }
+  }, [user]);
+
+  // ── After login/register, auto-continue checkout if user had tried ───────
+  useEffect(() => {
+    if (isLoggedIn && pendingSubmit) {
+      setPendingSubmit(false);
+      placeOrder();
+    }
+  }, [isLoggedIn, pendingSubmit]);
+
+  const handleChange = (e) =>
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+
+  // ── Validate form fields ──────────────────────────────────────────────────
+  const validate = () => {
+    if (!form.fullName.trim()) { toast.error("Please enter your full name.");    return false; }
+    if (!form.email.trim())    { toast.error("Please enter your email.");        return false; }
+    if (!form.street.trim())   { toast.error("Please enter your street address."); return false; }
+    if (!form.city.trim())     { toast.error("Please enter your city.");         return false; }
+    return true;
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    if (cart.length === 0) {
-      toast.error("Your cart is empty");
-      return;
-    }
-
-    setIsLoading(true);
+  // ── Main place order function ─────────────────────────────────────────────
+  const placeOrder = async () => {
+    if (!validate()) return;
+    setLoading(true);
     try {
       await checkout({
-        customer: {
-          fullName: form.fullName,
-          email:    form.email,
-          phone:    form.phone,
-        },
-        address: {
-          street:  form.street,
-          city:    form.city,
-          state:   form.state,
-          zip:     form.zip,
-        },
+        customer:      { fullName: form.fullName, email: form.email, phone: form.phone },
+        address:       { street: form.street, city: form.city, province: form.province, zip: form.zip },
         paymentMethod: form.paymentMethod,
         notes:         form.notes,
       });
-      toast.success("Order placed successfully!");
+      toast.success("Order placed successfully! 🎉");
+      router.push("/order-success");
     } catch (err) {
-      toast.error(err?.response?.data?.error || "Something went wrong. Please try again.");
+      toast.error(err?.response?.data?.error || "Checkout failed. Please try again.");
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
-  if (orderSuccess) {
-    return (
-      <>
-        <style>{`
-          @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Jost:wght@300;400;500;600&display=swap');
-          .font-cormorant { font-family: 'Cormorant Garamond', serif; }
-          .font-jost { font-family: 'Jost', sans-serif; }
-          @keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
-          @keyframes scaleIn { from { opacity:0; transform:scale(0.7); } to { opacity:1; transform:scale(1); } }
-          .fade-up { animation: fadeUp 0.5s ease both; }
-          .scale-in { animation: scaleIn 0.4s cubic-bezier(0.34,1.56,0.64,1) both; }
-        `}</style>
-        <div className="font-jost min-h-[80vh] flex items-center justify-center bg-stone-50 px-4">
-          <div className="text-center max-w-md">
-            <div className="scale-in w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-6">
-              <CheckCircle size={40} className="text-green-600" />
-            </div>
-            <h1 className="fade-up font-cormorant text-4xl font-semibold text-[#1a3820] mb-3">
-              Order Placed!
-            </h1>
-            <p className="fade-up text-stone-500 text-sm mb-2">
-              Thank you for your order. We've received it and will process it shortly.
-            </p>
-            <p className="fade-up text-xs text-stone-400 mb-8 font-mono bg-stone-100 px-3 py-2 rounded-lg inline-block">
-              Order ID: {String(orderSuccess).slice(-8).toUpperCase()}
-            </p>
-            <div className="fade-up flex gap-3 justify-center">
-              <Link
-                href="/"
-                className="inline-flex items-center gap-2 bg-[#1a3820] text-white px-6 py-3 rounded-xl text-sm font-medium hover:bg-[#244d2a] transition-all"
-              >
-                Back to Home
-              </Link>
-              <Link
-                href="/shop"
-                className="inline-flex items-center gap-2 border border-stone-200 text-stone-700 px-6 py-3 rounded-xl text-sm font-medium hover:bg-stone-50 transition-all"
-              >
-                Shop More
-              </Link>
-            </div>
-          </div>
-        </div>
-      </>
-    );
-  }
+  // ── Form submit — gate behind auth ───────────────────────────────────────
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!validate()) return;
 
-  if (cart.length === 0) {
+    // Not logged in → show auth modal, remember to retry after login
+    if (!isLoggedIn) {
+      setPendingSubmit(true);
+      setShowAuthModal(true);
+      return;
+    }
+
+    await placeOrder();
+  };
+
+  // ── Auth modal success ────────────────────────────────────────────────────
+  const handleAuthSuccess = () => {
+    setShowAuthModal(false);
+    // pendingSubmit useEffect will fire placeOrder automatically
+  };
+
+  // ── Empty cart state ──────────────────────────────────────────────────────
+  if (cart.length === 0 && !orderSuccess) {
     return (
-      <>
-        <style>{`
-          @import url('https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600&display=swap');
-          .font-jost { font-family: 'Jost', sans-serif; }
-        `}</style>
-        <div className="font-jost min-h-[60vh] flex flex-col items-center justify-center bg-stone-50 px-4 text-center">
-          <p className="text-stone-500 mb-4">Your cart is empty. Add some products first.</p>
-          <Link href="/shop" className="bg-[#1a3820] text-white px-6 py-3 rounded-xl text-sm font-medium hover:bg-[#244d2a] transition-all">
-            Go to Shop
-          </Link>
+      <div className="min-h-screen flex items-center justify-center bg-stone-50">
+        <div className="text-center">
+          <div className="text-5xl mb-4">🛒</div>
+          <h2 className="text-xl font-semibold text-gray-700 mb-2">Your cart is empty</h2>
+          <p className="text-gray-500 mb-6">Add some products before checking out.</p>
+          <button
+            onClick={() => router.push("/")}
+            className="bg-green-600 text-white px-6 py-2 rounded-xl hover:bg-green-700 transition-colors"
+          >
+            Shop Now
+          </button>
         </div>
-      </>
+      </div>
     );
   }
 
   return (
     <>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Jost:wght@300;400;500;600&display=swap');
-        .font-cormorant { font-family: 'Cormorant Garamond', serif; }
-        .font-jost { font-family: 'Jost', sans-serif; }
-        @keyframes fadeUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
-        .fade-up { animation: fadeUp 0.45s ease both; }
-        .d1 { animation-delay: 0.05s; } .d2 { animation-delay: 0.1s; }
-        .d3 { animation-delay: 0.15s; } .d4 { animation-delay: 0.2s; }
-        .input-field {
-          width: 100%; padding: 10px 14px; border-radius: 10px;
-          border: 1px solid #e5e7eb; background: white;
-          font-size: 14px; color: #1a2e1a; outline: none;
-          font-family: 'Jost', sans-serif;
-          transition: border-color 0.15s, box-shadow 0.15s;
-        }
-        .input-field:focus { border-color: #64a828; box-shadow: 0 0 0 3px rgba(100,168,40,0.12); }
-        .input-field::placeholder { color: #d1d5db; }
-        .section-label { font-size: 11px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: #6b7280; margin-bottom: 14px; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .spinner { animation: spin 0.7s linear infinite; }
-      `}</style>
+      {/* ── Auth Modal ────────────────────────────────────────────────────── */}
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => { setShowAuthModal(false); setPendingSubmit(false); }}
+        onSuccess={handleAuthSuccess}
+        defaultTab="login"
+      />
 
-      <div className="font-jost min-h-screen bg-stone-50">
-        {/* Header */}
-        <div className="bg-white border-b border-stone-200">
-          <div className="max-w-5xl mx-auto px-4 md:px-8 py-8">
-            <div className="fade-up flex items-center gap-3 mb-2">
-              <Leaf size={16} className="text-green-600" />
-              <p className="text-xs font-medium tracking-[2px] uppercase text-green-600">Checkout</p>
-            </div>
-            <div className="flex items-center justify-between">
-              <h1 className="fade-up font-cormorant text-4xl font-semibold text-[#1a3820]">
-                Complete Your Order
-              </h1>
-              <Link href="/cart" className="fade-up flex items-center gap-1.5 text-sm text-stone-500 hover:text-[#1a3820] transition-colors">
-                <ArrowLeft size={14} /> Back to Cart
-              </Link>
-            </div>
+      <div className="min-h-screen bg-stone-50 py-10 px-4">
+        <div className="max-w-5xl mx-auto">
+
+          {/* Page header */}
+          <div className="flex items-center justify-between mb-8">
+            <h1 className="text-3xl font-bold text-gray-800">Checkout</h1>
+
+            {/* Show logged-in user pill or "Sign in" prompt */}
+            {isLoggedIn ? (
+              <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-xl px-4 py-2">
+                <span className="text-green-600 text-sm">✓</span>
+                <span className="text-sm font-medium text-green-700">{user.userName}</span>
+                <span className="text-xs text-green-500 bg-green-100 px-2 py-0.5 rounded-full capitalize">{user.role}</span>
+              </div>
+            ) : (
+              <button
+                onClick={() => setShowAuthModal(true)}
+                className="text-sm text-[#1a3820] border border-[#1a3820]/20 bg-white px-4 py-2 rounded-xl hover:bg-[#1a3820] hover:text-white transition-all duration-200 font-medium cursor-pointer"
+              >
+                Sign in to your account
+              </button>
+            )}
           </div>
-        </div>
 
-        <div className="max-w-5xl mx-auto px-4 md:px-8 py-10">
-          <form onSubmit={handleSubmit}>
-            <div className="grid lg:grid-cols-3 gap-8">
-
-              {/* Left: Form Fields */}
-              <div className="lg:col-span-2 space-y-6">
-
-                {/* Contact Info */}
-                <div className="fade-up d1 bg-white border border-stone-200 rounded-2xl p-6">
-                  <p className="section-label">Contact Information</p>
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    <div className="sm:col-span-2">
-                      <label className="block text-xs font-medium text-[#3a5a2a] mb-1.5">Full Name *</label>
-                      <input
-                        className="input-field"
-                        name="fullName" type="text"
-                        placeholder="Ali Hassan"
-                        value={form.fullName} onChange={handleChange} required
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium text-[#3a5a2a] mb-1.5">Email Address *</label>
-                      <input
-                        className="input-field"
-                        name="email" type="email"
-                        placeholder="ali@example.com"
-                        value={form.email} onChange={handleChange} required
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium text-[#3a5a2a] mb-1.5">Phone Number</label>
-                      <input
-                        className="input-field"
-                        name="phone" type="tel"
-                        placeholder="03XX-XXXXXXX"
-                        value={form.phone} onChange={handleChange}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Delivery Address */}
-                <div className="fade-up d2 bg-white border border-stone-200 rounded-2xl p-6">
-                  <p className="section-label">Delivery Address</p>
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    <div className="sm:col-span-2">
-                      <label className="block text-xs font-medium text-[#3a5a2a] mb-1.5">Street Address *</label>
-                      <input
-                        className="input-field"
-                        name="street" type="text"
-                        placeholder="House # , Street, Area"
-                        value={form.street} onChange={handleChange} required
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium text-[#3a5a2a] mb-1.5">City *</label>
-                      <input
-                        className="input-field"
-                        name="city" type="text"
-                        placeholder="Lahore"
-                        value={form.city} onChange={handleChange} required
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium text-[#3a5a2a] mb-1.5">State / Province</label>
-                      <input
-                        className="input-field"
-                        name="state" type="text"
-                        placeholder="Punjab"
-                        value={form.state} onChange={handleChange}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium text-[#3a5a2a] mb-1.5">Postal Code</label>
-                      <input
-                        className="input-field"
-                        name="zip" type="text"
-                        placeholder="54000"
-                        value={form.zip} onChange={handleChange}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Payment Method */}
-                <div className="fade-up d3 bg-white border border-stone-200 rounded-2xl p-6">
-                  <p className="section-label">Payment Method</p>
-                  <div className="grid sm:grid-cols-3 gap-3">
-                    {[
-                      { value: "cod",           label: "Cash on Delivery", icon: "💵" },
-                      { value: "card",          label: "Card Payment",     icon: "💳" },
-                      { value: "bank_transfer", label: "Bank Transfer",    icon: "🏦" },
-                    ].map((method) => (
-                      <label
-                        key={method.value}
-                        className={`flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                          form.paymentMethod === method.value
-                            ? "border-[#64a828] bg-green-50"
-                            : "border-stone-200 hover:border-stone-300"
-                        }`}
-                      >
-                        <input
-                          type="radio" name="paymentMethod"
-                          value={method.value}
-                          checked={form.paymentMethod === method.value}
-                          onChange={handleChange}
-                          className="sr-only"
-                        />
-                        <span className="text-xl">{method.icon}</span>
-                        <span className="text-xs font-semibold text-[#1a2e1a] leading-tight">{method.label}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-
-            
-                <div className="fade-up d4 bg-white border border-stone-200 rounded-2xl p-6">
-                  <p className="section-label">Order Notes (Optional)</p>
-                  <textarea
-                    className="input-field resize-none"
-                    name="notes"
-                    rows={3}
-                    placeholder="Any special instructions for delivery..."
-                    value={form.notes}
-                    onChange={handleChange}
-                  />
-                </div>
-              </div>
-
-              {/* Right: Order Summary */}
-              <div className="fade-up d2">
-                <div className="bg-white border border-stone-200 rounded-2xl p-6 sticky top-24">
-                  <h2 className="font-cormorant text-2xl font-semibold text-[#1a3820] mb-4">
-                    Order Summary
-                  </h2>
-
-                  {/* Items */}
-                  <div className="space-y-3 mb-4 max-h-52 overflow-y-auto pr-1">
-                    {cart.map((item) => (
-                      <div key={item.id} className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-green-50 border border-green-100 flex items-center justify-center shrink-0 overflow-hidden">
-                          {item.image ? (
-                            <img src={item.image} alt={item.name} className="w-full h-full object-cover rounded-lg" />
-                          ) : (
-                            <span className="text-lg">🥦</span>
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs font-medium text-[#1a2e1a] truncate">{item.name}</p>
-                          <p className="text-xs text-stone-400">x{item.quantity}</p>
-                        </div>
-                        <span className="text-xs font-semibold text-[#1a3820]">
-                          Rs. {(item.price * item.quantity).toLocaleString()}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="border-t border-stone-100 pt-4 space-y-2 text-sm">
-                    <div className="flex justify-between text-stone-500">
-                      <span>Subtotal</span>
-                      <span className="font-medium text-[#1a2e1a]">Rs. {cartTotal.toLocaleString()}</span>
-                    </div>
-                    <div className="flex justify-between text-stone-500">
-                      <span>Delivery</span>
-                      {DELIVERY_FEE === 0 ? (
-                        <span className="text-green-600 font-semibold">FREE</span>
-                      ) : (
-                        <span className="font-medium text-[#1a2e1a]">Rs. {DELIVERY_FEE}</span>
-                      )}
-                    </div>
-                    <div className="flex justify-between font-bold text-[#1a2e1a] text-base pt-2 border-t border-stone-100">
-                      <span>Total</span>
-                      <span>Rs. {total.toLocaleString()}</span>
-                    </div>
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={isLoading}
-                    className="mt-5 w-full flex items-center justify-center gap-2 bg-[#1a3820] hover:bg-[#244d2a] text-white py-3.5 rounded-xl text-sm font-semibold transition-all hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0"
-                  >
-                    {isLoading ? (
-                      <>
-                        <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full spinner inline-block" />
-                        Placing Order…
-                      </>
-                    ) : (
-                      <>Place Order — Rs. {total.toLocaleString()}</>
-                    )}
-                  </button>
-
-                  <p className="text-center text-xs text-stone-400 mt-3">
-                    🔒 Your information is safe with us
-                  </p>
-                </div>
-              </div>
-
+          {/* Guest notice — only shown when not logged in */}
+          {!isLoggedIn && (
+            <div className="bg-amber-50 border border-amber-200 rounded-xl px-5 py-3 mb-6 flex items-center gap-3">
+              <span className="text-amber-500 text-lg">ℹ️</span>
+              <p className="text-sm text-amber-700">
+                You can fill in your details now.{" "}
+                <button
+                  onClick={() => setShowAuthModal(true)}
+                  className="font-semibold underline hover:no-underline cursor-pointer"
+                >
+                  Sign in or create an account
+                </button>{" "}
+                to complete your order.
+              </p>
             </div>
-          </form>
+          )}
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+            {/* ── Form ─────────────────────────────────────────────────── */}
+            <form onSubmit={handleSubmit} className="lg:col-span-2 space-y-6">
+
+              {/* Contact Info */}
+              <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                <h2 className="text-lg font-semibold text-gray-800 mb-4">Contact Information</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {[
+                    { name: "fullName", label: "Full Name *",   placeholder: "John Doe",           span: true },
+                    { name: "email",    label: "Email *",        placeholder: "john@example.com",   type: "email" },
+                    { name: "phone",    label: "Phone Number",   placeholder: "+92 300 0000000" },
+                  ].map((f) => (
+                    <div key={f.name} className={f.span ? "sm:col-span-2" : ""}>
+                      <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">{f.label}</label>
+                      <input
+                        name={f.name} type={f.type || "text"} placeholder={f.placeholder}
+                        value={form[f.name]} onChange={handleChange}
+                        className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/10 transition-all"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Delivery Address */}
+              <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                <h2 className="text-lg font-semibold text-gray-800 mb-4">Delivery Address</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {[
+                    { name: "street",   label: "Street Address *", placeholder: "123 Main Street", span: true },
+                    { name: "city",     label: "City *",            placeholder: "Karachi" },
+                    { name: "province", label: "Province",          placeholder: "Sindh" },
+                    { name: "zip",      label: "ZIP Code",          placeholder: "75500" },
+                  ].map((f) => (
+                    <div key={f.name} className={f.span ? "sm:col-span-2" : ""}>
+                      <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">{f.label}</label>
+                      <input
+                        name={f.name} placeholder={f.placeholder}
+                        value={form[f.name]} onChange={handleChange}
+                        className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/10 transition-all"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Payment */}
+              <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                <h2 className="text-lg font-semibold text-gray-800 mb-4">Payment Method</h2>
+                <div className="flex gap-3">
+                  {[
+                    { value: "cod",    label: "Cash on Delivery", icon: "💵" },
+                    { value: "card",   label: "Card",             icon: "💳" },
+                    { value: "online", label: "Online Transfer",  icon: "📱" },
+                  ].map((p) => (
+                    <label key={p.value} className={`flex-1 flex flex-col items-center gap-2 p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                      form.paymentMethod === p.value
+                        ? "border-green-500 bg-green-50"
+                        : "border-gray-200 hover:border-gray-300"
+                    }`}>
+                      <input
+                        type="radio" name="paymentMethod" value={p.value}
+                        checked={form.paymentMethod === p.value} onChange={handleChange}
+                        className="hidden"
+                      />
+                      <span className="text-2xl">{p.icon}</span>
+                      <span className="text-xs font-semibold text-gray-700">{p.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Notes */}
+              <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                <h2 className="text-lg font-semibold text-gray-800 mb-4">
+                  Order Notes <span className="text-gray-400 font-normal text-sm">(optional)</span>
+                </h2>
+                <textarea
+                  name="notes" placeholder="Any special instructions..."
+                  value={form.notes} onChange={handleChange} rows={3}
+                  className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/10 transition-all resize-none"
+                />
+              </div>
+
+              {/* Submit */}
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full py-4 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-2xl transition-all duration-200 hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed text-base cursor-pointer"
+              >
+                {loading
+                  ? "Placing Order…"
+                  : isLoggedIn
+                  ? `Place Order · Rs. ${grandTotal.toLocaleString()}`
+                  : `Sign In & Place Order · Rs. ${grandTotal.toLocaleString()}`}
+              </button>
+            </form>
+
+            {/* ── Order Summary ─────────────────────────────────────────── */}
+            <div className="space-y-4">
+              <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 sticky top-24">
+                <h2 className="text-lg font-semibold text-gray-800 mb-4">Order Summary</h2>
+
+                <div className="space-y-3 max-h-64 overflow-y-auto pr-1">
+                  {cart.map((item) => (
+                    <div key={item.id} className="flex items-center gap-3">
+                      <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-gray-100 shrink-0">
+                        {item.image ? (
+                          item.image.startsWith("data:") ? (
+                            <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <Image src={item.image} alt={item.name} fill className="object-cover" />
+                          )
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-lg">📦</div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-800 truncate">{item.name}</p>
+                        {item.shopName && <p className="text-xs text-green-600">{item.shopName}</p>}
+                        <p className="text-xs text-gray-500">x{item.quantity}</p>
+                      </div>
+                      <p className="text-sm font-semibold text-gray-800">
+                        Rs. {(item.price * item.quantity).toLocaleString()}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="border-t border-gray-100 mt-4 pt-4 space-y-2">
+                  <div className="flex justify-between text-sm text-gray-600">
+                    <span>Subtotal</span>
+                    <span>Rs. {cartTotal.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between text-sm text-gray-600">
+                    <span>Delivery</span>
+                    <span className={DELIVERY_FEE === 0 ? "text-green-600 font-medium" : ""}>
+                      {DELIVERY_FEE === 0 ? "Free" : `Rs. ${DELIVERY_FEE}`}
+                    </span>
+                  </div>
+                  <div className="flex justify-between font-bold text-gray-800 text-base pt-2 border-t border-gray-100">
+                    <span>Total</span>
+                    <span>Rs. {grandTotal.toLocaleString()}</span>
+                  </div>
+                </div>
+
+                {DELIVERY_FEE > 0 && (
+                  <p className="text-xs text-gray-400 mt-3 text-center">
+                    Add Rs. {(2000 - cartTotal).toLocaleString()} more for free delivery
+                  </p>
+                )}
+              </div>
+            </div>
+
+          </div>
         </div>
       </div>
     </>

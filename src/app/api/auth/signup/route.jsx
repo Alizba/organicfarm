@@ -1,63 +1,75 @@
+// app/api/auth/signup/route.jsx
+// Customer self-registration — creates a user with role: "user"
+// Shopkeeper accounts are created separately via admin approval flow
+
+import { NextResponse } from "next/server";
 import { connect } from "@/dbConfig/dbConfig";
-import  User from "@/models/userModel"
-import { NextResponse } from 'next/server'
-import bcryptjs from 'bcryptjs'
-import { sendEmail } from "@/helpers/mailer";
+import User from "@/models/userModel";
+import bcryptjs from "bcryptjs";
 
-
-connect()
+connect();
 
 export async function POST(request) {
+  try {
+    const { username, email, password } = await request.json();
 
-    try{
-    
-        const reqBody = await request.json()
-        const {username, email, password} = reqBody
-
-        const isAdminEmail = process.env.ADMIN_EMAIL;
-
-        const role = email === isAdminEmail ? "admin" : "user"
-        
-        if(!username || !email || !password){
-            return NextResponse.json(
-                {error: "All feilds are required"},
-                {status: 400}
-            )
-        }
-
-        console.log("USERNAME: ", username)
-
-        const user = await User.findOne({email})
-
-        if(user){
-            return NextResponse.json({error: "user already exists"}, {status:400})
-        }
-
-        const salt = await bcryptjs.genSaltSync(10)
-        const hashedPassword = await bcryptjs.hash(password, salt)
-
-        const newUser = new User({
-            userName : username,
-            email,
-            password: hashedPassword,
-            role
-        })
-
-        const savedUser = await newUser.save()
-        console.log(savedUser)
-
-        await sendEmail({email, emailType: "VERIFY", userId: savedUser._id})
-
-        return NextResponse.json({
-            message : "User Registered Successfully",
-            success: true,
-            savedUser
-        })
+    if (!username || !email || !password) {
+      return NextResponse.json(
+        { error: "All fields are required." },
+        { status: 400 }
+      );
     }
-    catch(error){
-        console.log("FULL ERROR: ", error)
-        return NextResponse.json({error: error.message},
-            {status: 500}
-        )
+
+    if (password.length < 6) {
+      return NextResponse.json(
+        { error: "Password must be at least 6 characters." },
+        { status: 400 }
+      );
     }
+
+    // Check duplicates
+    const existing = await User.findOne({
+      $or: [{ email }, { userName: username }],
+    });
+
+    if (existing) {
+      if (existing.email === email) {
+        return NextResponse.json(
+          { error: "An account with this email already exists." },
+          { status: 409 }
+        );
+      }
+      return NextResponse.json(
+        { error: "This username is already taken." },
+        { status: 409 }
+      );
+    }
+
+    const hashedPassword = await bcryptjs.hash(password, 10);
+
+    const newUser = await User.create({
+      userName:   username,
+      email,
+      password:   hashedPassword,
+      role:       "user",       // ✅ always "user" for self-signup
+      isVerified: true,         // skip email verification for now
+    });
+
+    return NextResponse.json(
+      {
+        success: true,
+        message: "Account created successfully.",
+        user: {
+          id:       newUser._id,
+          userName: newUser.userName,
+          email:    newUser.email,
+          role:     newUser.role,
+        },
+      },
+      { status: 201 }
+    );
+  } catch (error) {
+    console.error("Signup error:", error.message);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
 }

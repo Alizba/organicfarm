@@ -68,12 +68,7 @@ const Navbar = () => {
 
             {isLoggedIn ? (
               <div className="flex items-center gap-3">
-                <Link
-                  href={user?.role === "admin" ? "/roles/admin" : "/roles/shopkeeper"}
-                  className="text-sm font-medium text-gray-700 hover:text-green-800 transition-colors"
-                >
-                  Dashboard
-                </Link>
+                
                 <button
                   onClick={logout}
                   className="text-sm font-medium text-gray-500 hover:text-red-600 transition-colors"
