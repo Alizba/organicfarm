@@ -18,17 +18,22 @@ const userSchema = new mongoose.Schema(
     },
     isVerified: {
       type: Boolean,
-      default: true,
+      default: false, 
     },
     role: {
       type: String,
-      enum: ["shopkeeper", "admin"],
-      default: "shopkeeper",
+      enum: ["user", "shopkeeper", "admin"], 
+      default: "user", 
     },
     isAdmin: {
       type: Boolean,
       default: false,
     },
+
+    shopName: { type: String, default: null },
+    shopDescription: { type: String, default: null },
+    phone: { type: String, default: null },
+
     forgotPasswordToken: String,
     forgotPasswordTokenExpiry: Date,
     verifyToken: String,
@@ -36,7 +41,6 @@ const userSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
-
 
 const User = mongoose.models.User || mongoose.model("User", userSchema);
 

@@ -209,7 +209,6 @@ export default function ShopkeeperAnalyticsPage() {
               )}
             </div>
 
-            {/* Order Status Breakdown */}
             <div className="fade-in" style={{
               background: "#fff", border: "1px solid #e5e7eb",
               borderRadius: 12, overflow: "hidden",

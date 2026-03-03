@@ -18,10 +18,9 @@ export async function POST(request) {
       );
     }
 
-    // ── Check if this email has a shop request that is pending or rejected ──
-    // This runs BEFORE looking up the User, because pending/rejected applicants
-    // have no User document yet — they submitted a ShopRequest only.
-    const shopRequest = await ShopRequest.findOne({ email }).sort({ createdAt: -1 });
+    const shopRequest = await ShopRequest.findOne({ email }).sort({
+      createdAt: -1,
+    });
 
     if (shopRequest) {
       if (shopRequest.status === "pending") {
@@ -43,11 +42,8 @@ export async function POST(request) {
           { status: 403 }
         );
       }
-
-      // status === "approved" → a User was created, fall through to normal login
     }
 
-    // ── Normal login flow ───────────────────────────────────────────────────
     const user = await User.findOne({ email });
     if (!user) {
       return NextResponse.json(
@@ -64,18 +60,13 @@ export async function POST(request) {
       );
     }
 
-    // // ── Check email verified ─────────────────────────────────────────────
-    // if (!user.isVerified) {
-    //   return NextResponse.json(
-    //     { error: "Please verify your email before logging in" },
-    //     { status: 403 }
-    //   );
-    // }
-
     const tokenData = {
-      id:    user._id,
-      email: user.email,
-      role:  user.role,
+      id:          user._id,
+      email:       user.email,
+      userName:    user.userName, 
+      role:        user.role,        
+      shopName:    user.shopName || null,   
+      shopDescription: user.shopDescription || null, 
     };
 
     const token = jwt.sign(tokenData, process.env.TOKEN_SECRET, {
@@ -85,14 +76,15 @@ export async function POST(request) {
     const redirectMap = {
       admin:      "/roles/admin",
       shopkeeper: "/roles/shopkeeper",
-      user:       "/roles/user",
+      user:       "/",
     };
-    const redirectTo = redirectMap[user.role] || "/roles/user";
+    const redirectTo = redirectMap[user.role] || "/";
 
     const response = NextResponse.json({
       message:    "Login successful",
       success:    true,
       role:       user.role,
+      userName:   user.userName,
       redirectTo,
     });
 

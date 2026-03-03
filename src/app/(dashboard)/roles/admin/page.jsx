@@ -3,108 +3,87 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import axios from "axios";
-import Link from "next/link";
 
 const css = `
   @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500;600;700&display=swap');
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+  * { box-sizing: border-box; }
   body { font-family: 'DM Sans', sans-serif; background: #fafaf9; }
   .fade-in { animation: fadeUp 0.4s ease both; }
   @keyframes fadeUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
-  .card { transition: all 0.2s ease; }
-  .card:hover { box-shadow: 0 4px 24px rgba(0,0,0,0.09) !important; transform: translateY(-1px); }
-  .nav-link:hover { color: #0f172a !important; }
-  .btn-primary:hover { background: #1e293b !important; }
-  .stat-card { animation: fadeUp 0.4s ease both; }
-  .stat-card:nth-child(1) { animation-delay: 0.05s; }
-  .stat-card:nth-child(2) { animation-delay: 0.10s; }
-  .stat-card:nth-child(3) { animation-delay: 0.15s; }
-  .stat-card:nth-child(4) { animation-delay: 0.20s; }
-  .stat-card:nth-child(5) { animation-delay: 0.25s; }
-  .row:hover { background: #f8fafc !important; }
+  .card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.08) !important; }
 `;
 
-const NAV = [
-  { label: "Overview",       href: "/roles/admin",           active: true  },
-  { label: "Sell Interests", href: "/roles/admin/interests", active: false },
-  { label: "Orders",         href: "/roles/admin/orders",    active: false },
-];
+const STATUS_COLORS = {
+  pending:  { bg: "#fef9c3", color: "#92400e" },
+  approved: { bg: "#ecfdf5", color: "#059669" },
+  rejected: { bg: "#fef2f2", color: "#dc2626" },
+};
 
-export default function AdminDashboard() {
+export default function AdminShopRequestsPage() {
   const { user, loading, logout } = useAuth();
   const router = useRouter();
 
-  const [stats, setStats]                     = useState({ interests: 0, pendingInterests: 0, orders: 0, pendingOrders: 0, revenue: 0 });
-  const [recentInterests, setRecentInterests] = useState([]);
-  const [recentOrders, setRecentOrders]       = useState([]);
-  const [shopRevenues, setShopRevenues]       = useState([]);   // ← per-shop revenue
-  const [fetching, setFetching]               = useState(true);
+  const [requests, setRequests]       = useState([]);
+  const [fetching, setFetching]       = useState(true);
+  const [filter, setFilter]           = useState("pending"); 
+  const [actionId, setActionId]       = useState(null);      
+  const [rejectModal, setRejectModal] = useState(null);      
+  const [rejectReason, setRejectReason] = useState("");
+  const [error, setError]             = useState(null);
 
   useEffect(() => {
     if (!loading && (!user || user.role !== "admin")) router.replace("/login");
   }, [user, loading]);
 
   useEffect(() => {
-    if (user?.role === "admin") fetchAll();
-  }, [user]);
+    if (user) fetchRequests();
+  }, [user, filter]);
 
-  const fetchAll = async () => {
+  const fetchRequests = async () => {
+    setFetching(true);
     try {
-      const [interestsRes, ordersRes] = await Promise.all([
-        axios.get("/api/admin/users"),
-        axios.get("/api/checkout"),
-      ]);
-
-      // ✅ FIX 1: API returns `requests`, not `interests`
-      const interestList = interestsRes.data.requests || [];
-      const orderList    = ordersRes.data.orders || [];
-
-      // Total revenue (non-cancelled orders)
-      const totalRevenue = orderList
-        .filter((o) => o.status !== "cancelled")
-        .reduce((sum, o) => sum + (o.total || 0), 0);
-
-      // ✅ FIX 2: Per-shop revenue grouped by shopkeeper
-      const revenueByShop = {};
-      orderList
-        .filter((o) => o.status !== "cancelled")
-        .forEach((o) => {
-          // Try to group by shopName or sellerId — adjust field name to match your Order model
-          const shopKey = o.shopName || o.shopkeeper?.shopName || o.seller?.shopName || "Unknown Shop";
-          revenueByShop[shopKey] = (revenueByShop[shopKey] || 0) + (o.total || 0);
-        });
-
-      const shopRevenueList = Object.entries(revenueByShop)
-        .map(([shopName, revenue]) => ({ shopName, revenue }))
-        .sort((a, b) => b.revenue - a.revenue);   // highest revenue first
-
-      setStats({
-        interests:        interestList.length,
-        pendingInterests: interestList.filter((i) => i.status === "pending").length,
-        orders:           orderList.length,
-        pendingOrders:    orderList.filter((o) => o.status === "pending").length,
-        revenue:          totalRevenue,
-      });
-
-      setRecentInterests(interestList.slice(0, 5));
-      setRecentOrders(orderList.slice(0, 5));
-      setShopRevenues(shopRevenueList);
+      const params = filter !== "all" ? `?status=${filter}` : "";
+      const { data } = await axios.get(`/api/admin/shop-requests${params}`);
+      setRequests(data.requests || []);
     } catch (e) {
-      console.error(e);
+      setError("Failed to load requests.");
     } finally {
       setFetching(false);
     }
   };
 
-  if (loading || !user) return <Loader />;
+  const handleApprove = async (id) => {
+    if (!confirm("Approve this shopkeeper application?")) return;
+    setActionId(id);
+    try {
+      await axios.patch(`/api/admin/shop-requests?id=${id}`, { action: "approve" });
+      fetchRequests();
+    } catch (e) {
+      alert(e?.response?.data?.error || "Failed to approve.");
+    } finally {
+      setActionId(null);
+    }
+  };
 
-  const statCards = [
-    { label: "Sell Interests",   value: stats.interests,        accent: "#6366f1", icon: "🏪" },
-    { label: "Pending Interests",value: stats.pendingInterests, accent: "#f59e0b", icon: "⏰" },
-    { label: "Total Orders",     value: stats.orders,           accent: "#0f172a", icon: "📦" },
-    { label: "Pending Orders",   value: stats.pendingOrders,    accent: "#ef4444", icon: "⏳" },
-    { label: "Total Revenue",    value: `Rs. ${stats.revenue.toLocaleString()}`, accent: "#10b981", icon: "💰" },
-  ];
+  const handleReject = async () => {
+    if (!rejectModal) return;
+    setActionId(rejectModal.id);
+    try {
+      await axios.patch(`/api/admin/shop-requests?id=${rejectModal.id}`, {
+        action: "reject",
+        rejectionReason: rejectReason,
+      });
+      setRejectModal(null);
+      setRejectReason("");
+      fetchRequests();
+    } catch (e) {
+      alert(e?.response?.data?.error || "Failed to reject.");
+    } finally {
+      setActionId(null);
+    }
+  };
+
+  if (loading || !user) return <Loader />;
 
   return (
     <>
@@ -118,257 +97,214 @@ export default function AdminDashboard() {
           display: "flex", alignItems: "center", justifyContent: "space-between",
           position: "sticky", top: 0, zIndex: 50,
         }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 32 }}>
-            <span style={{ fontFamily: "'Instrument Serif', serif", fontSize: 20, color: "#0f172a" }}>
-              Admin
-            </span>
-            {NAV.map((n) => (
-              <Link key={n.href} href={n.href} className="nav-link" style={{
-                fontSize: 13, textDecoration: "none", transition: "color 0.15s",
-                fontWeight: n.active ? 700 : 500,
-                color: n.active ? "#0f172a" : "#64748b",
-              }}>{n.label}</Link>
-            ))}
-          </div>
+          <span style={{ fontFamily: "'Instrument Serif', serif", fontSize: 20, color: "#0f172a" }}>
+            Admin Panel
+          </span>
           <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
             <span style={{ fontSize: 13, color: "#64748b" }}>{user.userName}</span>
-            <button onClick={logout} className="btn-primary" style={{
+            <button onClick={logout} style={{
               background: "#0f172a", color: "#fff", border: "none",
-              borderRadius: 8, padding: "7px 16px", fontSize: 12,
-              fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
-              transition: "background 0.15s",
+              borderRadius: 8, padding: "7px 16px", fontSize: 12, fontWeight: 600,
+              cursor: "pointer", fontFamily: "inherit",
             }}>Logout</button>
           </div>
         </nav>
 
-        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "48px 40px" }}>
+        <div style={{ maxWidth: 900, margin: "0 auto", padding: "48px 40px" }}>
 
           {/* Header */}
-          <div className="fade-in" style={{ marginBottom: 40 }}>
+          <div className="fade-in" style={{ marginBottom: 32 }}>
             <h1 style={{ fontFamily: "'Instrument Serif', serif", fontSize: 36, color: "#0f172a", fontWeight: 400 }}>
-              Good morning, {user.userName} 👋
+              Shop Applications
             </h1>
             <p style={{ color: "#64748b", marginTop: 6, fontSize: 15 }}>
-              Here's what's happening on your platform today.
+              Review and approve or reject shopkeeper requests.
             </p>
           </div>
 
-          {/* Stat Cards */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 16, marginBottom: 40 }}>
-            {statCards.map((s) => (
-              <div key={s.label} className="stat-card card" style={{
-                background: "#fff", border: "1px solid #e5e7eb",
-                borderRadius: 12, padding: 20,
-                boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
-                borderTop: `3px solid ${s.accent}`,
-                cursor: "default",
-              }}>
-                <div style={{ fontSize: 22, marginBottom: 10 }}>{s.icon}</div>
-                <div style={{ fontSize: 28, fontWeight: 800, color: s.accent, fontFamily: "'Instrument Serif', serif" }}>
-                  {fetching ? "—" : s.value}
-                </div>
-                <div style={{ fontSize: 12, color: "#64748b", marginTop: 4, fontWeight: 500 }}>
-                  {s.label}
-                </div>
-              </div>
+          {/* Filter Tabs */}
+          <div className="fade-in" style={{ display: "flex", gap: 8, marginBottom: 28 }}>
+            {["pending", "approved", "rejected", "all"].map((f) => (
+              <button
+                key={f}
+                onClick={() => setFilter(f)}
+                style={{
+                  padding: "7px 18px", borderRadius: 99, fontSize: 12, fontWeight: 700,
+                  border: "1px solid",
+                  borderColor: filter === f ? "#0f172a" : "#e5e7eb",
+                  background: filter === f ? "#0f172a" : "#fff",
+                  color: filter === f ? "#fff" : "#64748b",
+                  cursor: "pointer", fontFamily: "inherit",
+                  textTransform: "capitalize",
+                }}
+              >{f}</button>
             ))}
           </div>
 
-          {/* Three column panels */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, marginBottom: 24 }}>
+          {/* Error */}
+          {error && (
+            <div style={{ background: "#fef2f2", color: "#dc2626", padding: "12px 16px", borderRadius: 8, marginBottom: 20, fontSize: 13 }}>
+              {error}
+            </div>
+          )}
 
-            {/* Recent Sell Interests */}
-            <div className="fade-in" style={{
-              background: "#fff", border: "1px solid #e5e7eb",
-              borderRadius: 12, overflow: "hidden",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
-            }}>
-              <div style={{
-                padding: "18px 24px", borderBottom: "1px solid #f1f5f9",
-                display: "flex", justifyContent: "space-between", alignItems: "center",
-              }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <span style={{ fontSize: 16 }}>🏪</span>
-                  <span style={{ fontWeight: 700, fontSize: 14, color: "#0f172a" }}>Sell Interests</span>
-                  {stats.pendingInterests > 0 && (
-                    <span style={{ background: "#6366f1", color: "#fff", fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 99 }}>
-                      {stats.pendingInterests} pending
-                    </span>
-                  )}
-                </div>
-                <Link href="/roles/admin/interests" style={{ fontSize: 12, color: "#3b82f6", textDecoration: "none", fontWeight: 600 }}>
-                  View all →
-                </Link>
-              </div>
+          {/* Loading */}
+          {fetching && (
+            <div style={{ textAlign: "center", padding: 60, color: "#94a3b8" }}>Loading...</div>
+          )}
 
-              {fetching ? (
-                <div style={{ padding: 40, textAlign: "center", color: "#94a3b8", fontSize: 13 }}>Loading...</div>
-              ) : recentInterests.length === 0 ? (
-                <div style={{ padding: 40, textAlign: "center", color: "#94a3b8", fontSize: 13 }}>No interests yet</div>
-              ) : (
-                recentInterests.map((r, i) => (
-                  <div key={r._id} className="row" style={{
-                    padding: "14px 24px",
-                    borderBottom: i < recentInterests.length - 1 ? "1px solid #f8fafc" : "none",
-                    display: "flex", alignItems: "center", justifyContent: "space-between",
-                    background: "#fff", transition: "background 0.15s",
-                  }}>
-                    <div>
-                      <div style={{ fontWeight: 600, fontSize: 13, color: "#0f172a" }}>{r.shopName}</div>
-                      <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 2 }}>{r.fullName} · {r.email}</div>
-                    </div>
-                    <InterestBadge status={r.status} />
+          {/* Empty */}
+          {!fetching && requests.length === 0 && (
+            <div style={{ textAlign: "center", padding: 60, color: "#94a3b8", fontSize: 14 }}>
+              No <strong>{filter}</strong> applications found.
+            </div>
+          )}
+
+          {/* Request Cards */}
+          {!fetching && requests.map((req) => {
+            const statusStyle = STATUS_COLORS[req.status] || STATUS_COLORS.pending;
+            const isProcessing = actionId === req._id;
+
+            return (
+              <div
+                key={req._id}
+                className="card fade-in"
+                style={{
+                  background: "#fff", border: "1px solid #e5e7eb",
+                  borderRadius: 14, padding: "24px 28px", marginBottom: 16,
+                  boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+                  transition: "box-shadow 0.2s",
+                }}
+              >
+                {/* Top row */}
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: 17, color: "#0f172a" }}>{req.shopName}</div>
+                    <div style={{ fontSize: 13, color: "#64748b", marginTop: 3 }}>by {req.fullName}</div>
                   </div>
-                ))
-              )}
-            </div>
-
-            {/* Recent Orders */}
-            <div className="fade-in" style={{
-              background: "#fff", border: "1px solid #e5e7eb",
-              borderRadius: 12, overflow: "hidden",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
-            }}>
-              <div style={{
-                padding: "18px 24px", borderBottom: "1px solid #f1f5f9",
-                display: "flex", justifyContent: "space-between", alignItems: "center",
-              }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <span style={{ fontSize: 16 }}>📦</span>
-                  <span style={{ fontWeight: 700, fontSize: 14, color: "#0f172a" }}>Recent Orders</span>
-                  {stats.pendingOrders > 0 && (
-                    <span style={{ background: "#ef4444", color: "#fff", fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 99 }}>
-                      {stats.pendingOrders} pending
-                    </span>
-                  )}
+                  <span style={{
+                    background: statusStyle.bg, color: statusStyle.color,
+                    fontSize: 11, fontWeight: 700, padding: "4px 10px",
+                    borderRadius: 99, textTransform: "capitalize",
+                  }}>{req.status}</span>
                 </div>
-                <Link href="/roles/admin/orders" style={{ fontSize: 12, color: "#3b82f6", textDecoration: "none", fontWeight: 600 }}>
-                  View all →
-                </Link>
-              </div>
 
-              {fetching ? (
-                <div style={{ padding: 40, textAlign: "center", color: "#94a3b8", fontSize: 13 }}>Loading...</div>
-              ) : recentOrders.length === 0 ? (
-                <div style={{ padding: 40, textAlign: "center", color: "#94a3b8", fontSize: 13 }}>No orders yet</div>
-              ) : (
-                recentOrders.map((o, i) => (
-                  <div key={o._id} className="row" style={{
-                    padding: "14px 24px",
-                    borderBottom: i < recentOrders.length - 1 ? "1px solid #f8fafc" : "none",
-                    display: "flex", alignItems: "center", justifyContent: "space-between",
-                    background: "#fff", transition: "background 0.15s",
+                {/* Details grid */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px 24px", marginBottom: 16 }}>
+                  {[
+                    { label: "Email",    value: req.email },
+                    { label: "Username", value: req.userName },
+                    { label: "Phone",    value: req.phone || "—" },
+                    { label: "Applied",  value: new Date(req.createdAt).toLocaleDateString("en-PK", { day: "numeric", month: "short", year: "numeric" }) },
+                  ].map(({ label, value }) => (
+                    <div key={label}>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: 0.5 }}>{label}</span>
+                      <div style={{ fontSize: 13, color: "#0f172a", marginTop: 2 }}>{value}</div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Shop description */}
+                {req.shopDescription && (
+                  <div style={{
+                    background: "#f8fafc", borderRadius: 8, padding: "10px 14px",
+                    fontSize: 13, color: "#475569", marginBottom: 16,
                   }}>
-                    <div>
-                      <div style={{ fontWeight: 600, fontSize: 13, color: "#0f172a" }}>
-                        {o.customer?.fullName}
-                      </div>
-                      <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 2 }}>
-                        {o.items?.length} item{o.items?.length !== 1 ? "s" : ""} · Rs. {o.total?.toLocaleString()}
-                      </div>
-                    </div>
-                    <OrderBadge status={o.status} />
+                    {req.shopDescription}
                   </div>
-                ))
-              )}
-            </div>
-          </div>
+                )}
 
-          {/* ✅ NEW: Per-Shop Revenue Panel */}
-          <div className="fade-in" style={{
-            background: "#fff", border: "1px solid #e5e7eb",
-            borderRadius: 12, overflow: "hidden",
-            boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
-          }}>
-            <div style={{
-              padding: "18px 24px", borderBottom: "1px solid #f1f5f9",
-              display: "flex", justifyContent: "space-between", alignItems: "center",
-            }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <span style={{ fontSize: 16 }}>💰</span>
-                <span style={{ fontWeight: 700, fontSize: 14, color: "#0f172a" }}>Revenue by Shop</span>
+                {/* Rejection reason */}
+                {req.status === "rejected" && req.rejectionReason && (
+                  <div style={{
+                    background: "#fef2f2", borderRadius: 8, padding: "10px 14px",
+                    fontSize: 13, color: "#dc2626", marginBottom: 16,
+                  }}>
+                    <strong>Reason:</strong> {req.rejectionReason}
+                  </div>
+                )}
+
+                {/* Action buttons — only for pending */}
+                {req.status === "pending" && (
+                  <div style={{ display: "flex", gap: 10 }}>
+                    <button
+                      onClick={() => handleApprove(req._id)}
+                      disabled={isProcessing}
+                      style={{
+                        background: "#059669", color: "#fff", border: "none",
+                        borderRadius: 8, padding: "9px 20px", fontSize: 13,
+                        fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
+                        opacity: isProcessing ? 0.6 : 1,
+                      }}
+                    >{isProcessing ? "Processing…" : "✓ Approve"}</button>
+                    <button
+                      onClick={() => { setRejectModal({ id: req._id, shopName: req.shopName }); setRejectReason(""); }}
+                      disabled={isProcessing}
+                      style={{
+                        background: "#fef2f2", color: "#dc2626", border: "1px solid #fecaca",
+                        borderRadius: 8, padding: "9px 20px", fontSize: 13,
+                        fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
+                        opacity: isProcessing ? 0.6 : 1,
+                      }}
+                    >✕ Reject</button>
+                  </div>
+                )}
               </div>
-              <span style={{ fontSize: 12, color: "#94a3b8" }}>Excludes cancelled orders</span>
-            </div>
-
-            {fetching ? (
-              <div style={{ padding: 40, textAlign: "center", color: "#94a3b8", fontSize: 13 }}>Loading...</div>
-            ) : shopRevenues.length === 0 ? (
-              <div style={{ padding: 40, textAlign: "center", color: "#94a3b8", fontSize: 13 }}>No revenue data yet</div>
-            ) : (
-              <div style={{ padding: "8px 0" }}>
-                {shopRevenues.map((s, i) => {
-                  const maxRevenue = shopRevenues[0].revenue;
-                  const pct = maxRevenue > 0 ? (s.revenue / maxRevenue) * 100 : 0;
-                  return (
-                    <div key={s.shopName} className="row" style={{
-                      padding: "12px 24px",
-                      borderBottom: i < shopRevenues.length - 1 ? "1px solid #f8fafc" : "none",
-                      background: "#fff", transition: "background 0.15s",
-                    }}>
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                          <span style={{
-                            width: 22, height: 22, borderRadius: "50%",
-                            background: "#f1f5f9", fontSize: 11, fontWeight: 700,
-                            color: "#64748b", display: "flex", alignItems: "center", justifyContent: "center",
-                          }}>{i + 1}</span>
-                          <span style={{ fontWeight: 600, fontSize: 13, color: "#0f172a" }}>{s.shopName}</span>
-                        </div>
-                        <span style={{ fontWeight: 700, fontSize: 13, color: "#10b981" }}>
-                          Rs. {s.revenue.toLocaleString()}
-                        </span>
-                      </div>
-                      {/* Progress bar */}
-                      <div style={{ height: 4, background: "#f1f5f9", borderRadius: 99, overflow: "hidden" }}>
-                        <div style={{
-                          height: "100%", borderRadius: 99,
-                          background: "linear-gradient(90deg, #10b981, #34d399)",
-                          width: `${pct}%`, transition: "width 0.6s ease",
-                        }} />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-
+            );
+          })}
         </div>
       </div>
+
+      {/* Reject Modal */}
+      {rejectModal && (
+        <div style={{
+          position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)",
+          display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100,
+        }}>
+          <div style={{
+            background: "#fff", borderRadius: 16, padding: 32,
+            width: "100%", maxWidth: 440,
+            boxShadow: "0 20px 60px rgba(0,0,0,0.2)",
+          }}>
+            <div style={{ fontWeight: 700, fontSize: 17, color: "#0f172a", marginBottom: 8 }}>
+              Reject Application
+            </div>
+            <div style={{ fontSize: 13, color: "#64748b", marginBottom: 20 }}>
+              Rejecting <strong>{rejectModal.shopName}</strong>. You can optionally provide a reason.
+            </div>
+            <textarea
+              placeholder="Rejection reason (optional)..."
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              rows={3}
+              style={{
+                width: "100%", padding: "10px 12px", fontSize: 13,
+                border: "1px solid #e5e7eb", borderRadius: 8,
+                fontFamily: "inherit", resize: "vertical", marginBottom: 20,
+              }}
+            />
+            <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+              <button
+                onClick={() => setRejectModal(null)}
+                style={{
+                  background: "#f1f5f9", color: "#64748b", border: "none",
+                  borderRadius: 8, padding: "9px 20px", fontSize: 13,
+                  fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
+                }}
+              >Cancel</button>
+              <button
+                onClick={handleReject}
+                style={{
+                  background: "#dc2626", color: "#fff", border: "none",
+                  borderRadius: 8, padding: "9px 20px", fontSize: 13,
+                  fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
+                }}
+              >Confirm Reject</button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
-  );
-}
-
-function InterestBadge({ status }) {
-  const map = {
-    pending:  { bg: "#fff8e1", color: "#d97706", label: "Pending"  },
-    approved: { bg: "#ecfdf5", color: "#059669", label: "Approved" },
-    rejected: { bg: "#fef2f2", color: "#dc2626", label: "Rejected" },
-  };
-  const s = map[status] || map.pending;
-  return <Badge bg={s.bg} color={s.color} label={s.label} />;
-}
-
-function OrderBadge({ status }) {
-  const map = {
-    pending:    { bg: "#fff8e1", color: "#d97706", label: "Pending"    },
-    confirmed:  { bg: "#eff6ff", color: "#3b82f6", label: "Confirmed"  },
-    processing: { bg: "#f5f3ff", color: "#7c3aed", label: "Processing" },
-    shipped:    { bg: "#ecfeff", color: "#0891b2", label: "Shipped"    },
-    delivered:  { bg: "#ecfdf5", color: "#059669", label: "Delivered"  },
-    cancelled:  { bg: "#fef2f2", color: "#dc2626", label: "Cancelled"  },
-  };
-  const s = map[status] || map.pending;
-  return <Badge bg={s.bg} color={s.color} label={s.label} />;
-}
-
-function Badge({ bg, color, label }) {
-  return (
-    <span style={{
-      background: bg, color, fontSize: 11,
-      fontWeight: 700, padding: "4px 10px", borderRadius: 99, letterSpacing: 0.5,
-    }}>{label}</span>
   );
 }
 

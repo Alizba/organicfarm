@@ -7,9 +7,9 @@ connect();
 
 export async function GET(request) {
   try {
-    const userId = await getDataFromToken(request);
+    const tokenData = getDataFromToken(request); 
 
-    const user = await User.findById(userId).select(
+    const user = await User.findById(tokenData.id).select(
       "-password -verifyToken -verifyTokenExpiry -forgotPasswordToken -forgotPasswordTokenExpiry"
     );
 
@@ -19,12 +19,15 @@ export async function GET(request) {
 
     return NextResponse.json({
       user: {
-        id:         user._id,
-        userName:   user.userName,
-        email:      user.email,
-        role:       user.role,
-        isVerified: user.isVerified,
-        isAdmin:    user.isAdmin,
+        id:              user._id,
+        userName:        user.userName,
+        email:           user.email,
+        role:            user.role,
+        isVerified:      user.isVerified,
+        isAdmin:         user.isAdmin,
+        shopName:        user.shopName || null,        
+        shopDescription: user.shopDescription || null, 
+        phone:           user.phone || null,         
       },
     });
   } catch (error) {

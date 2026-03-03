@@ -1,41 +1,42 @@
+
 import mongoose from "mongoose";
 
 const orderItemSchema = new mongoose.Schema({
-  productId: { type: String },
+  productId: { type: mongoose.Schema.Types.ObjectId, ref: "Product" },
   name:      { type: String, required: true },
+  image:     { type: String },
   price:     { type: Number, required: true },
   quantity:  { type: Number, required: true, min: 1 },
-  image:     { type: String },
+  weight:    { type: String },
 });
 
 const orderSchema = new mongoose.Schema(
   {
     customer: {
-      fullName: { type: String, required: [true, "Full name is required"] },
-      email:    { type: String, required: [true, "Email is required"] },
+      fullName: { type: String, required: true },
+      email:    { type: String, required: true },
       phone:    { type: String },
     },
 
     address: {
-      street:  { type: String, required: [true, "Street address is required"] },
-      city:    { type: String, required: [true, "City is required"] },
-      state:   { type: String },
-      zip:     { type: String },
-      country: { type: String, default: "Pakistan" },
+      street:   { type: String, required: true },
+      city:     { type: String, required: true },
+      province: { type: String },
+      zip:      { type: String },
     },
 
-    items: {
-      type: [orderItemSchema],
-      required: true,
-      validate: {
-        validator: (v) => v.length > 0,
-        message: "Order must have at least one item",
-      },
-    },
+    items: [orderItemSchema],
 
     subtotal:    { type: Number, required: true },
     deliveryFee: { type: Number, default: 0 },
     total:       { type: Number, required: true },
+
+    shopkeeper: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+    shopName: { type: String, default: null },
 
     status: {
       type: String,
@@ -45,22 +46,12 @@ const orderSchema = new mongoose.Schema(
 
     paymentMethod: {
       type: String,
-      enum: ["cod", "card", "bank_transfer"],
+      enum: ["cod", "card", "online"],
       default: "cod",
     },
 
-    notes: { type: String },
-
-    shopkeeper: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      default: null,   
-    },
-
-    shopName: {
-      type: String,
-      default: null,
-    },
+    isPaid:  { type: Boolean, default: false },
+    notes:   { type: String, default: null },
   },
   { timestamps: true }
 );

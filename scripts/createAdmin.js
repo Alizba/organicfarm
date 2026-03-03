@@ -1,97 +1,63 @@
-// scripts/createAdmin.js
-// Run to create admin or shopkeeper accounts:
-//
-//   node scripts/createAdmin.js admin
-//   node scripts/createAdmin.js shopkeeper
+import mongoose from "mongoose";
+import bcryptjs from "bcryptjs";
+import dotenv from "dotenv";
+import path from "path";
+import { fileURLToPath } from "url";
 
-const mongoose = require("mongoose");
-const bcryptjs  = require("bcryptjs");
-const path      = require("path");
+const __filename = fileURLToPath(import.meta.url);
+const __dirname  = path.dirname(__filename);
+dotenv.config({ path: path.join(__dirname, "../.env") });
 
-require("dotenv").config({ path: path.join(__dirname, "../.env") });
-
-const userSchema = new mongoose.Schema(
-  {
-    userName:   { type: String, required: true, unique: true },
-    email:      { type: String, required: true, unique: true },
-    password:   { type: String, required: true },
-    isVerified: { type: Boolean, default: true },
-    role:       { type: String, enum: ["shopkeeper", "admin"], default: "shopkeeper" },
-    isAdmin:    { type: Boolean, default: false },
-  },
-  { timestamps: true }
-);
+const userSchema = new mongoose.Schema({
+  userName:        String,
+  email:           String,
+  password:        String,
+  isVerified:      { type: Boolean, default: true },
+  role:            { type: String, default: "shopkeeper" },
+  isAdmin:         { type: Boolean, default: false },
+  shopName:        String,
+  shopDescription: String,
+  phone:           String,
+});
 
 const User = mongoose.models.User || mongoose.model("User", userSchema);
 
-const ACCOUNTS = {
-  admin: {
-    userName: "admin",
-    email:    process.env.ADMIN_EMAIL || "fruiter@admin.com",
-    password: "Admin@123",                // change this
-    role:     "admin",
-  },
-  shopkeeper: {
-    userName: "shopkeeper1",
-    email:    "shopkeeper1@bioprox.com",  // change this
-    password: "Shop@123",                 // change this
-    role:     "shopkeeper",
-  },
-};
-
-async function main() {
-  const roleArg = process.argv[2];
-
-  if (!roleArg || !["admin", "shopkeeper"].includes(roleArg)) {
-    console.error("Please specify a role: admin or shopkeeper");
-    console.error("Example: node scripts/createAdmin.js admin");
-    process.exit(1);
-  }
-
-  if (!process.env.MONGO_URL) {
-    console.error("MONGO_URL is not set in your .env file");
-    process.exit(1);
-  }
-
+async function createShopkeeper() {
   await mongoose.connect(process.env.MONGO_URL);
   console.log("Connected to MongoDB");
 
-  const data = ACCOUNTS[roleArg];
+  const email    = "shopkeeper@test.com";
+  const password = "shopkeeper123";
+  const userName = "test_shopkeeper";
+  const shopName = "Test Shop";
 
-  const existing = await User.findOne({
-    $or: [{ email: data.email }, { userName: data.userName }],
-  });
-
+  const existing = await User.findOne({ email });
   if (existing) {
-    console.log("Account already exists:");
-    console.log("  Email:   ", existing.email);
-    console.log("  Username:", existing.userName);
-    console.log("  Role:    ", existing.role);
+    console.log("Account already exists! Login with:");
+    console.log(`  Email:    ${email}`);
+    console.log(`  Password: ${password}`);
     await mongoose.disconnect();
     return;
   }
 
-  const hashedPassword = await bcryptjs.hash(data.password, 12);
-
-  const user = await User.create({
-    userName:   data.userName,
-    email:      data.email,
-    password:   hashedPassword,
-    role:       data.role,
-    isVerified: true,
-    isAdmin:    data.role === "admin",
+  const hashed = await bcryptjs.hash(password, 10);
+  await User.create({
+    userName,
+    email,
+    password:    hashed,
+    role:        "shopkeeper",
+    isVerified:  true,
+    shopName,
+    shopDescription: "A test shop for development",
   });
 
-  console.log(`\n${roleArg} account created!`);
-  console.log("  Email:   ", user.email);
-  console.log("  Username:", user.userName);
-  console.log("  Role:    ", user.role);
-  console.log("\n  You can now log in at /login\n");
+  console.log("✅ Test shopkeeper created!");
+  console.log(`  Email:    ${email}`);
+  console.log(`  Password: ${password}`);
+  console.log(`  ShopName: ${shopName}`);
+  console.log("\nNow log in at /login with these credentials.");
 
   await mongoose.disconnect();
 }
 
-main().catch((err) => {
-  console.error("Error:", err.message);
-  process.exit(1);
-});
+createShopkeeper().catch(console.error);

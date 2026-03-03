@@ -4,26 +4,30 @@ import ShopRequest from "@/models/ShopRequest";
 import User from "@/models/userModel";
 import { NextResponse } from "next/server";
 
-// GET — fetch this shopkeeper's shop info from ShopRequest
 export async function GET(request) {
   try {
     await connect();
-    const userId = await getDataFromToken(request);
 
-    const user = await User.findById(userId);
+    const tokenData = getDataFromToken(request);
+
+    const user = await User.findById(tokenData.id);
     if (!user || user.role !== "shopkeeper") {
       return NextResponse.json({ error: "Unauthorized." }, { status: 403 });
     }
 
-    // Find the approved ShopRequest that matches this user's email
-    const shop = await ShopRequest.findOne({
+    const shopRequest = await ShopRequest.findOne({
       email:  user.email,
       status: "approved",
     });
 
-    if (!shop) {
-      return NextResponse.json({ error: "Shop not found." }, { status: 404 });
-    }
+    const shop = {
+      shopName:        user.shopName        || shopRequest?.shopName        || null,
+      shopDescription: user.shopDescription || shopRequest?.shopDescription || null,
+      phone:           user.phone           || shopRequest?.phone           || null,
+      email:           user.email,
+      status:          "approved",
+      createdAt:       user.createdAt,
+    };
 
     return NextResponse.json({ shop });
   } catch (error) {
@@ -32,13 +36,13 @@ export async function GET(request) {
   }
 }
 
-// PATCH — update shopName, shopDescription, phone on their ShopRequest record
 export async function PATCH(request) {
   try {
     await connect();
-    const userId = await getDataFromToken(request);
 
-    const user = await User.findById(userId);
+    const tokenData = getDataFromToken(request);
+
+    const user = await User.findById(tokenData.id);
     if (!user || user.role !== "shopkeeper") {
       return NextResponse.json({ error: "Unauthorized." }, { status: 403 });
     }
@@ -49,15 +53,25 @@ export async function PATCH(request) {
       return NextResponse.json({ error: "Shop name is required." }, { status: 400 });
     }
 
-    const shop = await ShopRequest.findOneAndUpdate(
-      { email: user.email, status: "approved" },
+    const updatedUser = await User.findByIdAndUpdate(
+      tokenData.id,
       { shopName, shopDescription, phone },
       { new: true }
     );
 
-    if (!shop) {
-      return NextResponse.json({ error: "Shop not found." }, { status: 404 });
-    }
+    await ShopRequest.findOneAndUpdate(
+      { email: user.email, status: "approved" },
+      { shopName, shopDescription, phone }
+    );
+
+    const shop = {
+      shopName:        updatedUser.shopName,
+      shopDescription: updatedUser.shopDescription,
+      phone:           updatedUser.phone,
+      email:           updatedUser.email,
+      status:          "approved",
+      createdAt:       updatedUser.createdAt,
+    };
 
     return NextResponse.json({ message: "Shop updated.", shop });
   } catch (error) {
