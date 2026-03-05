@@ -52,7 +52,7 @@ export default function DealCard({ title, image, Category, price, weight }) {
           )}
         </div>
 
-        <button className="w-full py-3 bg-linear-to-r from-green-600 to-emerald-600 text-white font-semibold rounded-xl opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300 hover:from-green-700 hover:to-emerald-700 shadow-lg hover:shadow-xl">
+        <button className="cursor-pointer w-full py-3 bg-linear-to-r from-green-600 to-emerald-600 text-white font-semibold rounded-xl opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300 hover:from-green-700 hover:to-emerald-700 shadow-lg hover:shadow-xl">
           Add to Cart
         </button>
       </div>

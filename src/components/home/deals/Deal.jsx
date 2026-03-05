@@ -32,7 +32,7 @@ export const Deal = () => {
                 Lorem ipsum dolor sit amet consectetur adipisicing elit.
               </p>
               <div>
-                <Button>Buy Now</Button>
+                <Button className='cursor-pointer'>Buy Now</Button>
               </div>
             </div>
           </div>

@@ -1,38 +1,33 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Search, SlidersHorizontal, ArrowLeft, X } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import ProductCard from "@/components/home/products/ProductCard";
 import Link from "next/link";
 
-// ── Only the 4 categories that exist in DB ────────────────────────────────
 const CATEGORIES = {
   fruits: {
     label:    "Fresh Fruits",
-    icon:     "🍎",
     dbValue:  "fruits",
     desc:     "Sun-ripened, farm-fresh fruits picked at peak sweetness.",
     gradient: "from-orange-400 to-rose-500",
   },
   vegetables: {
     label:    "Fresh Vegetables",
-    icon:     "🥦",
     dbValue:  "vegetables",
     desc:     "Crisp, organic vegetables grown without harmful pesticides.",
     gradient: "from-green-500 to-emerald-700",
   },
   nuts: {
     label:    "Premium Nuts",
-    icon:     "🥜",
     dbValue:  "nuts",
     desc:     "Protein-rich, export-quality nuts sourced from the finest farms.",
     gradient: "from-amber-600 to-yellow-700",
   },
   greenyLeave: {
     label:    "Leafy Greens",
-    icon:     "🥬",
     dbValue:  "greenyLeave",
     desc:     "Tender, nutrient-dense leafy greens from local organic farms.",
     gradient: "from-lime-500 to-green-600",
@@ -65,17 +60,15 @@ export default function CategoryPage() {
   const [vegOnly, setVegOnly]       = useState(false);
   const [inStockOnly, setInStockOnly] = useState(false);
 
-  // Unknown category → go home
   useEffect(() => {
-    if (!cat) router.replace("/");
-  }, [cat]);
+    if (slug && !cat) router.replace("/");
+  }, [slug, cat]);
 
-  const fetchProducts = useCallback(async () => {
-    if (!cat) return;
+  const fetchProducts = async (dbValue) => {
     setLoading(true);
     setError(null);
     try {
-      const res  = await fetch(`/api/customer/shop?category=${cat.dbValue}`);
+      const res  = await fetch(`/api/customer/shop?category=${dbValue}`);
       if (!res.ok) throw new Error("Failed to load");
       const data = await res.json();
       const list = data.products || [];
@@ -85,16 +78,18 @@ export default function CategoryPage() {
         setMaxPrice(max);
         setPriceLimit(max);
       }
-    } catch {
+    } catch (e) {
+      console.error("fetch error", e);
       setError("Could not load products. Please try again.");
     } finally {
       setLoading(false);
     }
-  }, [cat]);
+  };
 
-  useEffect(() => { fetchProducts(); }, [fetchProducts]);
+  useEffect(() => {
+    if (slug && cat) fetchProducts(cat.dbValue);
+  }, [slug]);
 
-  // Apply filters + sort
   useEffect(() => {
     let result = [...products];
     if (search.trim()) {
@@ -112,6 +107,7 @@ export default function CategoryPage() {
     setFiltered(result);
   }, [products, search, priceLimit, sort, vegOnly, inStockOnly]);
 
+  if (!slug) return null;
   if (!cat) return null;
 
   const activeFilterCount = [
@@ -157,27 +153,11 @@ export default function CategoryPage() {
             </Link>
 
             <div className="anim-up">
-              <div className="text-5xl mb-3">{cat.icon}</div>
               <h1 className="font-cormorant text-5xl font-semibold text-white leading-tight mb-2">{cat.label}</h1>
               <p className="text-white/70 text-sm max-w-md">{cat.desc}</p>
             </div>
 
-            {!loading && (
-              <div className="flex gap-4 mt-6">
-                {[
-                  { label: "Products",  value: products.length },
-                  { label: "In Stock",  value: products.filter((p) => p.instock !== false).length },
-                  ...(products.some((p) => p.originalPrice > p.price)
-                    ? [{ label: "On Sale", value: products.filter((p) => p.originalPrice > p.price).length }]
-                    : []),
-                ].map((s) => (
-                  <div key={s.label} className="bg-white/15 backdrop-blur-sm rounded-xl px-4 py-2">
-                    <span className="text-white font-semibold text-lg">{s.value}</span>
-                    <span className="text-white/70 text-xs ml-1.5">{s.label}</span>
-                  </div>
-                ))}
-              </div>
-            )}
+           
           </div>
         </div>
 
@@ -293,7 +273,7 @@ export default function CategoryPage() {
           {!loading && error && (
             <div className="text-center py-20">
               <p className="text-red-500 mb-4">{error}</p>
-              <button onClick={fetchProducts} className="bg-[#1a3820] text-white px-6 py-2.5 rounded-xl text-sm font-medium cursor-pointer">Try Again</button>
+              <button onClick={() => fetchProducts(cat.dbValue)} className="bg-[#1a3820] text-white px-6 py-2.5 rounded-xl text-sm font-medium cursor-pointer">Try Again</button>
             </div>
           )}
 

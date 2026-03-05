@@ -17,7 +17,7 @@ export default function CategoryCard({ title, image }) {
   const card = (
     <div className={`relative bg-linear-to-br from-gray-100 to-gray-200 rounded-2xl p-6 text-center transition-all duration-300 h-full flex flex-col group
       ${hasData
-        ? "cursor-pointer hover:shadow-lg hover:scale-[1.02] hover:from-green-50 hover:to-emerald-100 border-2 border-transparent hover:border-green-300"
+        ? "cursor-pointer hover:shadow-lg border-2 border-transparent hover:border-green-300"
         : "cursor-default opacity-70"
       }`}
     >

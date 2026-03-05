@@ -2,6 +2,7 @@ import React from 'react'
 import CategorySlider from './CategorySlider'
 import { ShoppingBag } from 'lucide-react'
 import Button from '../../ui/Button.jsx'
+import Link from 'next/link'
 
 const Category = () => {
     return (
@@ -15,11 +16,15 @@ const Category = () => {
                 </div>
                 <Button className="hidden md:block">View All Items</Button>
             </div>
-            
+
             <CategorySlider />
-            
+
             <div className='md:hidden flex justify-center mt-6'>
-                <Button>View All Items</Button>
+                <Button className='cursor-pointer'>
+                    <Link href="./shop">
+                        View All Items
+                    </Link>
+                </Button>
             </div>
         </section>
     )

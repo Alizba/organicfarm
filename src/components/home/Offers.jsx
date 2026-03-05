@@ -3,6 +3,7 @@
 import React from 'react'
 import Image from 'next/image'
 import Button from '../ui/Button'
+import Link from 'next/link'
 
 const Offers = () => {
     return (
@@ -10,13 +11,13 @@ const Offers = () => {
             {/* Decorative background elements */}
             <div className='absolute top-0 right-0 w-64 h-64 bg-orange-400 rounded-full blur-3xl opacity-20'></div>
             <div className='absolute bottom-0 left-0 w-48 h-48 bg-yellow-300 rounded-full blur-3xl opacity-20'></div>
-            
+
             <div className='flex flex-col lg:flex-row justify-center items-center gap-12 lg:gap-8 relative z-10 mx-auto'>
 
                 {/* Left Offer Card - Fruits */}
                 <div className='flex flex-col sm:flex-row justify-center items-center gap-6 p-8 group w-full'>
                     <div className='relative'>
-                        <Image 
+                        <Image
                             src="/images/mixFruits.png"
                             alt='Fresh mixed fruits'
                             height={220}
@@ -26,14 +27,16 @@ const Offers = () => {
                     </div>
                     <div className='text-center sm:text-left space-y-3'>
                         <p className='text-xs font-semibold text-orange-600 uppercase tracking-widest italic opacity-70'>Shop for</p>
-                        <h2 className='text-2xl font-bold text-gray-800 leading-tight'>FRESH FRUITS<br/>ONLINE</h2>
+                        <h2 className='text-2xl font-bold text-gray-800 leading-tight'>FRESH FRUITS<br />ONLINE</h2>
                         <p className='text-base font-semibold text-orange-500 flex items-center justify-center sm:justify-start gap-2'>
-                      
+
                             Save up to <span className='text-xl text-orange-600'>40%</span>
                         </p>
                         <div className='pt-2'>
                             <Button className='transform hover:translate-y-0.5 transition-transform shadow-md hover:shadow-lg'>
-                                View Items →
+                                <Link href='./shop'>
+                                    View Items →
+                                </Link>
                             </Button>
                         </div>
                     </div>
@@ -54,7 +57,7 @@ const Offers = () => {
                 {/* Right Offer Card - Vegetables */}
                 <div className='flex flex-col sm:flex-row-reverse justify-center items-center gap-6 p-8 group w-full '>
                     <div className='relative'>
-                        <Image 
+                        <Image
                             src="/images/mixVeges.png"
                             alt='Fresh mixed vegetables'
                             height={250}
@@ -64,14 +67,16 @@ const Offers = () => {
                     </div>
                     <div className='text-center sm:text-left space-y-3'>
                         <p className='text-xs font-semibold text-green-600 uppercase tracking-widest italic opacity-70'>Shop for</p>
-                        <h2 className='text-2xl font-bold text-gray-800 leading-tight'>FRESH VEGETABLES<br/>ONLINE</h2>
+                        <h2 className='text-2xl font-bold text-gray-800 leading-tight'>FRESH VEGETABLES<br />ONLINE</h2>
                         <p className='text-base font-semibold text-green-500 flex items-center justify-center sm:justify-start gap-2'>
-                          
+
                             Save up to <span className='text-xl text-green-600'>40%</span>
                         </p>
                         <div className='pt-2'>
                             <Button className='transform hover:translate-y-0.5 transition-transform shadow-md hover:shadow-lg'>
-                                View Items →
+                                <Link href="./shop">
+                                    View Items →
+                                </Link>
                             </Button>
                         </div>
                     </div>

@@ -12,13 +12,11 @@ export default function OrderSuccessPage() {
   const router   = useRouter();
   const [show, setShow] = useState(false);
 
-  // Trigger entrance animation
   useEffect(() => {
     const t = setTimeout(() => setShow(true), 50);
     return () => clearTimeout(t);
   }, []);
 
-  // If someone lands here directly with no order, send them home
   useEffect(() => {
     if (!orderIds || orderIds.length === 0) {
       const t = setTimeout(() => router.replace("/"), 3000);
@@ -79,7 +77,6 @@ export default function OrderSuccessPage() {
       >
         <div className="w-full max-w-lg text-center">
 
-          {/* ── Animated checkmark ──────────────────────────────────── */}
           <div className="anim-pop d1 relative inline-flex items-center justify-center mb-8">
             {/* Ripple rings */}
             <div className="ripple absolute w-24 h-24 rounded-full bg-green-200 opacity-40" style={{ animationDelay: "0s" }} />
@@ -100,7 +97,6 @@ export default function OrderSuccessPage() {
             </div>
           </div>
 
-          {/* ── Heading ──────────────────────────────────────────────── */}
           <div className="anim-fadeup d2 mb-2">
             <p className="text-xs font-medium tracking-[3px] uppercase text-[#64a828] mb-3">
               Order Confirmed
@@ -116,7 +112,6 @@ export default function OrderSuccessPage() {
               : "Your order has been placed and confirmed. We'll get it ready and on its way to you soon."}
           </p>
 
-          {/* ── Order ID card ────────────────────────────────────────── */}
           {orderIds && orderIds.length > 0 && (
             <div className="anim-fadeup d3 mb-8">
               {isMultiShop ? (
@@ -140,7 +135,6 @@ export default function OrderSuccessPage() {
             </div>
           )}
 
-          {/* ── Info cards ───────────────────────────────────────────── */}
           <div className="anim-fadeup d4 grid grid-cols-3 gap-3 mb-8">
             {[
               { icon: "📦", label: "Processing",  desc: "Order received" },
@@ -155,7 +149,6 @@ export default function OrderSuccessPage() {
             ))}
           </div>
 
-          {/* ── COD notice ───────────────────────────────────────────── */}
           <div className="anim-fadeup d4 bg-amber-50 border border-amber-100 rounded-xl px-5 py-3 mb-8 text-left">
             <div className="flex gap-3 items-start">
               <span className="text-amber-500 text-lg mt-0.5">💵</span>
@@ -168,7 +161,6 @@ export default function OrderSuccessPage() {
             </div>
           </div>
 
-          {/* ── Action buttons ───────────────────────────────────────── */}
           <div className="anim-fadeup d5 flex gap-3 justify-center">
             <Link
               href="/"
