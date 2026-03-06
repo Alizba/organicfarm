@@ -42,21 +42,37 @@ const contactInfo = [
 ]
 
 const Contact = () => {
-  const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' })
+  const [form, setForm]           = useState({ name: '', email: '', subject: '', message: '' })
   const [submitted, setSubmitted] = useState(false)
-  const [focused, setFocused] = useState('')
+  const [focused, setFocused]     = useState('')
+  const [sending, setSending]     = useState(false)
+  const [error, setError]         = useState(null)
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value })
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    setSubmitted(true)
+    setSending(true)
+    setError(null)
+    try {
+      const res = await fetch('/api/admin/contact-messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Failed to send message.')
+      setSubmitted(true)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setSending(false)
+    }
   }
 
   return (
     <section className="relative bg-[#f6f6f5] py-24 px-6 overflow-hidden" style={{ fontFamily: "'Georgia', 'Times New Roman', serif" }}>
 
-      {/* Top border line */}
       <div className="absolute top-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-green-50 to-transparent" />
 
       <div className="relative max-w-6xl mx-auto">
@@ -65,9 +81,7 @@ const Contact = () => {
         <div className="text-center mb-16">
           <div className="inline-flex items-center gap-3 mb-5">
             <span className="w-8 h-px bg-green-500" />
-            <span className="text-[11px] uppercase tracking-[0.35em] text-green-600 font-semibold">
-              Get in Touch
-            </span>
+            <span className="text-[11px] uppercase tracking-[0.35em] text-green-600 font-semibold">Get in Touch</span>
             <span className="w-8 h-px bg-green-500" />
           </div>
           <h2 className="text-4xl md:text-5xl font-bold text-[#1e2d1e] leading-tight">
@@ -86,37 +100,23 @@ const Contact = () => {
 
           {/* Left — Contact Info */}
           <div className="flex flex-col gap-5">
-
-            {/* Info cards */}
             {contactInfo.map((item, i) => (
-              <div key={i}
-                className="flex items-start gap-4 bg-white border border-[#e5e0d8] rounded-2xl px-6 py-5 shadow-sm hover:shadow-md hover:border-green-300 hover:-translate-y-0.5 transition-all duration-300"
-              >
+              <div key={i} className="flex items-start gap-4 bg-white border border-[#e5e0d8] rounded-2xl px-6 py-5 shadow-sm hover:shadow-md hover:border-green-300 hover:-translate-y-0.5 transition-all duration-300">
                 <div className="shrink-0 w-10 h-10 rounded-xl bg-green-50 border border-green-100 flex items-center justify-center text-green-600">
                   {item.icon}
                 </div>
                 <div>
-                  <p className="text-[11px] uppercase tracking-widest text-[#8a9e8a] mb-0.5" style={{ fontFamily: 'sans-serif' }}>
-                    {item.label}
-                  </p>
-                  <p className="text-sm text-[#2d3d2d] font-medium leading-snug" style={{ fontFamily: 'sans-serif' }}>
-                    {item.value}
-                  </p>
+                  <p className="text-[11px] uppercase tracking-widest text-[#8a9e8a] mb-0.5" style={{ fontFamily: 'sans-serif' }}>{item.label}</p>
+                  <p className="text-sm text-[#2d3d2d] font-medium leading-snug" style={{ fontFamily: 'sans-serif' }}>{item.value}</p>
                 </div>
               </div>
             ))}
 
-            {/* Social row */}
             <div className="bg-white border border-[#e5e0d8] rounded-2xl px-6 py-5 shadow-sm">
-              <p className="text-[11px] uppercase tracking-widest text-[#8a9e8a] mb-4" style={{ fontFamily: 'sans-serif' }}>
-                Follow Our Journey
-              </p>
+              <p className="text-[11px] uppercase tracking-widest text-[#8a9e8a] mb-4" style={{ fontFamily: 'sans-serif' }}>Follow Our Journey</p>
               <div className="flex gap-3">
                 {['Instagram', 'Facebook', 'Twitter'].map((social) => (
-                  <button key={social}
-                    className="flex-1 py-2 rounded-xl text-xs font-semibold border border-[#e5e0d8] text-[#5a6e5a] hover:bg-green-600 hover:text-white hover:border-green-600 transition-all duration-300 cursor-pointer"
-                    style={{ fontFamily: 'sans-serif' }}
-                  >
+                  <button key={social} className="flex-1 py-2 rounded-xl text-xs font-semibold border border-[#e5e0d8] text-[#5a6e5a] hover:bg-green-600 hover:text-white hover:border-green-600 transition-all duration-300 cursor-pointer" style={{ fontFamily: 'sans-serif' }}>
                     {social}
                   </button>
                 ))}
@@ -154,32 +154,31 @@ const Contact = () => {
                   Fill in the form and we'll respond promptly.
                 </p>
 
+                {/* ── API error ── */}
+                {error && (
+                  <div className="mb-5 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600" style={{ fontFamily: 'sans-serif' }}>
+                    {error}
+                  </div>
+                )}
+
                 <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-                  {/* Name + Email row */}
+                  {/* Name + Email */}
                   <div className="grid sm:grid-cols-2 gap-4">
                     {[
-                      { name: 'name', label: 'Your Name', type: 'text', placeholder: 'Jane Smith' },
-                      { name: 'email', label: 'Email Address', type: 'email', placeholder: 'jane@email.com' },
+                      { name: 'name',  label: 'Your Name',     type: 'text',  placeholder: 'Jane Smith'      },
+                      { name: 'email', label: 'Email Address',  type: 'email', placeholder: 'jane@email.com'  },
                     ].map((field) => (
                       <div key={field.name} className="flex flex-col gap-1.5">
                         <label className="text-[11px] uppercase tracking-widest text-[#8a9e8a]" style={{ fontFamily: 'sans-serif' }}>
                           {field.label}
                         </label>
                         <input
-                          type={field.type}
-                          name={field.name}
-                          value={form[field.name]}
+                          type={field.type} name={field.name} value={form[field.name]}
                           onChange={handleChange}
-                          onFocus={() => setFocused(field.name)}
-                          onBlur={() => setFocused('')}
-                          placeholder={field.placeholder}
-                          required
+                          onFocus={() => setFocused(field.name)} onBlur={() => setFocused('')}
+                          placeholder={field.placeholder} required
                           className="w-full bg-[#f7f4ef] border rounded-xl px-4 py-3 text-sm text-[#1e2d1e] placeholder-[#b0bdb0] outline-none transition-all duration-300"
-                          style={{
-                            fontFamily: 'sans-serif',
-                            borderColor: focused === field.name ? '#4ade80' : '#e5e0d8',
-                            boxShadow: focused === field.name ? '0 0 0 3px rgba(74,222,128,0.12)' : 'none',
-                          }}
+                          style={{ fontFamily: 'sans-serif', borderColor: focused === field.name ? '#4ade80' : '#e5e0d8', boxShadow: focused === field.name ? '0 0 0 3px rgba(74,222,128,0.12)' : 'none' }}
                         />
                       </div>
                     ))}
@@ -187,22 +186,13 @@ const Contact = () => {
 
                   {/* Subject */}
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-[11px] uppercase tracking-widest text-[#8a9e8a]" style={{ fontFamily: 'sans-serif' }}>
-                      Subject
-                    </label>
+                    <label className="text-[11px] uppercase tracking-widest text-[#8a9e8a]" style={{ fontFamily: 'sans-serif' }}>Subject</label>
                     <select
-                      name="subject"
-                      value={form.subject}
-                      onChange={handleChange}
-                      onFocus={() => setFocused('subject')}
-                      onBlur={() => setFocused('')}
+                      name="subject" value={form.subject} onChange={handleChange}
+                      onFocus={() => setFocused('subject')} onBlur={() => setFocused('')}
                       required
                       className="w-full bg-[#f7f4ef] border rounded-xl px-4 py-3 text-sm text-[#1e2d1e] outline-none transition-all duration-300 cursor-pointer"
-                      style={{
-                        fontFamily: 'sans-serif',
-                        borderColor: focused === 'subject' ? '#4ade80' : '#e5e0d8',
-                        boxShadow: focused === 'subject' ? '0 0 0 3px rgba(74,222,128,0.12)' : 'none',
-                      }}
+                      style={{ fontFamily: 'sans-serif', borderColor: focused === 'subject' ? '#4ade80' : '#e5e0d8', boxShadow: focused === 'subject' ? '0 0 0 3px rgba(74,222,128,0.12)' : 'none' }}
                     >
                       <option value="" disabled>Select a topic...</option>
                       <option value="produce">Produce & Orders</option>
@@ -215,37 +205,38 @@ const Contact = () => {
 
                   {/* Message */}
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-[11px] uppercase tracking-widest text-[#8a9e8a]" style={{ fontFamily: 'sans-serif' }}>
-                      Message
-                    </label>
+                    <label className="text-[11px] uppercase tracking-widest text-[#8a9e8a]" style={{ fontFamily: 'sans-serif' }}>Message</label>
                     <textarea
-                      name="message"
-                      value={form.message}
-                      onChange={handleChange}
-                      onFocus={() => setFocused('message')}
-                      onBlur={() => setFocused('')}
-                      placeholder="Tell us what's on your mind..."
-                      rows={5}
-                      required
+                      name="message" value={form.message} onChange={handleChange}
+                      onFocus={() => setFocused('message')} onBlur={() => setFocused('')}
+                      placeholder="Tell us what's on your mind..." rows={5} required
                       className="w-full bg-[#f7f4ef] border rounded-xl px-4 py-3 text-sm text-[#1e2d1e] placeholder-[#b0bdb0] outline-none resize-none transition-all duration-300"
-                      style={{
-                        fontFamily: 'sans-serif',
-                        borderColor: focused === 'message' ? '#4ade80' : '#e5e0d8',
-                        boxShadow: focused === 'message' ? '0 0 0 3px rgba(74,222,128,0.12)' : 'none',
-                      }}
+                      style={{ fontFamily: 'sans-serif', borderColor: focused === 'message' ? '#4ade80' : '#e5e0d8', boxShadow: focused === 'message' ? '0 0 0 3px rgba(74,222,128,0.12)' : 'none' }}
                     />
                   </div>
 
                   {/* Submit */}
                   <button
-                    type="submit"
-                    className="w-full bg-green-700 hover:bg-green-600 text-white font-bold text-sm uppercase tracking-widest py-4 rounded-xl transition-all duration-300 cursor-pointer shadow-md hover:shadow-lg hover:-translate-y-0.5 flex items-center justify-center gap-2"
+                    type="submit" disabled={sending}
+                    className="w-full bg-green-700 hover:bg-green-600 text-white font-bold text-sm uppercase tracking-widest py-4 rounded-xl transition-all duration-300 cursor-pointer shadow-md hover:shadow-lg hover:-translate-y-0.5 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0"
                     style={{ fontFamily: 'sans-serif' }}
                   >
-                    <span>Send Message</span>
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                    </svg>
+                    {sending ? (
+                      <>
+                        <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                        </svg>
+                        <span>Sending…</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>Send Message</span>
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                        </svg>
+                      </>
+                    )}
                   </button>
                 </form>
               </>
@@ -254,7 +245,6 @@ const Contact = () => {
         </div>
       </div>
 
-      {/* Bottom border */}
       <div className="absolute bottom-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-green-50 to-transparent" />
     </section>
   )

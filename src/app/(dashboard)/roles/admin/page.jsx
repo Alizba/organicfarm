@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import axios from "axios";
+import Link from "next/link";
 
 const css = `
   @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500;600;700&display=swap');
@@ -11,6 +12,7 @@ const css = `
   .fade-in { animation: fadeUp 0.4s ease both; }
   @keyframes fadeUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
   .card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.08) !important; }
+  .nav-link:hover { color: #0f172a !important; }
 `;
 
 const STATUS_COLORS = {
@@ -19,17 +21,26 @@ const STATUS_COLORS = {
   rejected: { bg: "#fef2f2", color: "#dc2626" },
 };
 
+// ── All admin nav links in one place ────────────────────────────────────────
+const NAV = [
+  { label: "Overview",         href: "/roles/admin"                  },
+  { label: "Shop Requests",    href: "/roles/admin/shop-requests"    },
+  { label: "Sell Interests",   href: "/roles/admin/interests"        },
+  { label: "Orders",           href: "/roles/admin/orders"           },
+  { label: "Contact Messages", href: "/roles/admin/contact-messages" },
+];
+
 export default function AdminShopRequestsPage() {
   const { user, loading, logout } = useAuth();
   const router = useRouter();
 
-  const [requests, setRequests]       = useState([]);
-  const [fetching, setFetching]       = useState(true);
-  const [filter, setFilter]           = useState("pending"); 
-  const [actionId, setActionId]       = useState(null);      
-  const [rejectModal, setRejectModal] = useState(null);      
+  const [requests, setRequests]         = useState([]);
+  const [fetching, setFetching]         = useState(true);
+  const [filter, setFilter]             = useState("pending");
+  const [actionId, setActionId]         = useState(null);
+  const [rejectModal, setRejectModal]   = useState(null);
   const [rejectReason, setRejectReason] = useState("");
-  const [error, setError]             = useState(null);
+  const [error, setError]               = useState(null);
 
   useEffect(() => {
     if (!loading && (!user || user.role !== "admin")) router.replace("/login");
@@ -90,16 +101,23 @@ export default function AdminShopRequestsPage() {
       <style>{css}</style>
       <div style={{ minHeight: "100vh", background: "#fafaf9" }}>
 
-        {/* Nav */}
+        {/* ── Nav ─────────────────────────────────────────────────────── */}
         <nav style={{
           background: "#fff", borderBottom: "1px solid #e5e7eb",
           padding: "0 40px", height: 60,
           display: "flex", alignItems: "center", justifyContent: "space-between",
           position: "sticky", top: 0, zIndex: 50,
         }}>
-          <span style={{ fontFamily: "'Instrument Serif', serif", fontSize: 20, color: "#0f172a" }}>
-            Admin Panel
-          </span>
+          <div style={{ display: "flex", alignItems: "center", gap: 28 }}>
+            <span style={{ fontFamily: "'Instrument Serif', serif", fontSize: 20, color: "#0f172a" }}>Admin</span>
+            {NAV.map((n) => (
+              <Link key={n.href} href={n.href} className="nav-link" style={{
+                fontSize: 13, textDecoration: "none", transition: "color 0.15s",
+                fontWeight: n.href === "/roles/admin/shop-requests" ? 700 : 500,
+                color:      n.href === "/roles/admin/shop-requests" ? "#0f172a" : "#64748b",
+              }}>{n.label}</Link>
+            ))}
+          </div>
           <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
             <span style={{ fontSize: 13, color: "#64748b" }}>{user.userName}</span>
             <button onClick={logout} style={{
@@ -125,35 +143,25 @@ export default function AdminShopRequestsPage() {
           {/* Filter Tabs */}
           <div className="fade-in" style={{ display: "flex", gap: 8, marginBottom: 28 }}>
             {["pending", "approved", "rejected", "all"].map((f) => (
-              <button
-                key={f}
-                onClick={() => setFilter(f)}
-                style={{
-                  padding: "7px 18px", borderRadius: 99, fontSize: 12, fontWeight: 700,
-                  border: "1px solid",
-                  borderColor: filter === f ? "#0f172a" : "#e5e7eb",
-                  background: filter === f ? "#0f172a" : "#fff",
-                  color: filter === f ? "#fff" : "#64748b",
-                  cursor: "pointer", fontFamily: "inherit",
-                  textTransform: "capitalize",
-                }}
-              >{f}</button>
+              <button key={f} onClick={() => setFilter(f)} style={{
+                padding: "7px 18px", borderRadius: 99, fontSize: 12, fontWeight: 700,
+                border: "1px solid",
+                borderColor: filter === f ? "#0f172a" : "#e5e7eb",
+                background:  filter === f ? "#0f172a" : "#fff",
+                color:       filter === f ? "#fff" : "#64748b",
+                cursor: "pointer", fontFamily: "inherit", textTransform: "capitalize",
+              }}>{f}</button>
             ))}
           </div>
 
-          {/* Error */}
           {error && (
-            <div style={{ background: "#fef2f2", color: "#dc2626", padding: "12px 16px", borderRadius: 8, marginBottom: 20, fontSize: 13 }}>
-              {error}
-            </div>
+            <div style={{ background: "#fef2f2", color: "#dc2626", padding: "12px 16px", borderRadius: 8, marginBottom: 20, fontSize: 13 }}>{error}</div>
           )}
 
-          {/* Loading */}
           {fetching && (
             <div style={{ textAlign: "center", padding: 60, color: "#94a3b8" }}>Loading...</div>
           )}
 
-          {/* Empty */}
           {!fetching && requests.length === 0 && (
             <div style={{ textAlign: "center", padding: 60, color: "#94a3b8", fontSize: 14 }}>
               No <strong>{filter}</strong> applications found.
@@ -162,34 +170,22 @@ export default function AdminShopRequestsPage() {
 
           {/* Request Cards */}
           {!fetching && requests.map((req) => {
-            const statusStyle = STATUS_COLORS[req.status] || STATUS_COLORS.pending;
+            const statusStyle  = STATUS_COLORS[req.status] || STATUS_COLORS.pending;
             const isProcessing = actionId === req._id;
-
             return (
-              <div
-                key={req._id}
-                className="card fade-in"
-                style={{
-                  background: "#fff", border: "1px solid #e5e7eb",
-                  borderRadius: 14, padding: "24px 28px", marginBottom: 16,
-                  boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
-                  transition: "box-shadow 0.2s",
-                }}
-              >
-                {/* Top row */}
+              <div key={req._id} className="card fade-in" style={{
+                background: "#fff", border: "1px solid #e5e7eb",
+                borderRadius: 14, padding: "24px 28px", marginBottom: 16,
+                boxShadow: "0 1px 3px rgba(0,0,0,0.05)", transition: "box-shadow 0.2s",
+              }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
                   <div>
                     <div style={{ fontWeight: 700, fontSize: 17, color: "#0f172a" }}>{req.shopName}</div>
                     <div style={{ fontSize: 13, color: "#64748b", marginTop: 3 }}>by {req.fullName}</div>
                   </div>
-                  <span style={{
-                    background: statusStyle.bg, color: statusStyle.color,
-                    fontSize: 11, fontWeight: 700, padding: "4px 10px",
-                    borderRadius: 99, textTransform: "capitalize",
-                  }}>{req.status}</span>
+                  <span style={{ background: statusStyle.bg, color: statusStyle.color, fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 99, textTransform: "capitalize" }}>{req.status}</span>
                 </div>
 
-                {/* Details grid */}
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px 24px", marginBottom: 16 }}>
                   {[
                     { label: "Email",    value: req.email },
@@ -204,49 +200,30 @@ export default function AdminShopRequestsPage() {
                   ))}
                 </div>
 
-                {/* Shop description */}
                 {req.shopDescription && (
-                  <div style={{
-                    background: "#f8fafc", borderRadius: 8, padding: "10px 14px",
-                    fontSize: 13, color: "#475569", marginBottom: 16,
-                  }}>
+                  <div style={{ background: "#f8fafc", borderRadius: 8, padding: "10px 14px", fontSize: 13, color: "#475569", marginBottom: 16 }}>
                     {req.shopDescription}
                   </div>
                 )}
 
-                {/* Rejection reason */}
                 {req.status === "rejected" && req.rejectionReason && (
-                  <div style={{
-                    background: "#fef2f2", borderRadius: 8, padding: "10px 14px",
-                    fontSize: 13, color: "#dc2626", marginBottom: 16,
-                  }}>
+                  <div style={{ background: "#fef2f2", borderRadius: 8, padding: "10px 14px", fontSize: 13, color: "#dc2626", marginBottom: 16 }}>
                     <strong>Reason:</strong> {req.rejectionReason}
                   </div>
                 )}
 
-                {/* Action buttons — only for pending */}
                 {req.status === "pending" && (
                   <div style={{ display: "flex", gap: 10 }}>
-                    <button
-                      onClick={() => handleApprove(req._id)}
-                      disabled={isProcessing}
-                      style={{
-                        background: "#059669", color: "#fff", border: "none",
-                        borderRadius: 8, padding: "9px 20px", fontSize: 13,
-                        fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
-                        opacity: isProcessing ? 0.6 : 1,
-                      }}
-                    >{isProcessing ? "Processing…" : "✓ Approve"}</button>
-                    <button
-                      onClick={() => { setRejectModal({ id: req._id, shopName: req.shopName }); setRejectReason(""); }}
-                      disabled={isProcessing}
-                      style={{
-                        background: "#fef2f2", color: "#dc2626", border: "1px solid #fecaca",
-                        borderRadius: 8, padding: "9px 20px", fontSize: 13,
-                        fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
-                        opacity: isProcessing ? 0.6 : 1,
-                      }}
-                    >✕ Reject</button>
+                    <button onClick={() => handleApprove(req._id)} disabled={isProcessing} style={{
+                      background: "#059669", color: "#fff", border: "none",
+                      borderRadius: 8, padding: "9px 20px", fontSize: 13,
+                      fontWeight: 600, cursor: "pointer", fontFamily: "inherit", opacity: isProcessing ? 0.6 : 1,
+                    }}>{isProcessing ? "Processing…" : "✓ Approve"}</button>
+                    <button onClick={() => { setRejectModal({ id: req._id, shopName: req.shopName }); setRejectReason(""); }} disabled={isProcessing} style={{
+                      background: "#fef2f2", color: "#dc2626", border: "1px solid #fecaca",
+                      borderRadius: 8, padding: "9px 20px", fontSize: 13,
+                      fontWeight: 600, cursor: "pointer", fontFamily: "inherit", opacity: isProcessing ? 0.6 : 1,
+                    }}>✕ Reject</button>
                   </div>
                 )}
               </div>
@@ -257,49 +234,20 @@ export default function AdminShopRequestsPage() {
 
       {/* Reject Modal */}
       {rejectModal && (
-        <div style={{
-          position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)",
-          display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100,
-        }}>
-          <div style={{
-            background: "#fff", borderRadius: 16, padding: 32,
-            width: "100%", maxWidth: 440,
-            boxShadow: "0 20px 60px rgba(0,0,0,0.2)",
-          }}>
-            <div style={{ fontWeight: 700, fontSize: 17, color: "#0f172a", marginBottom: 8 }}>
-              Reject Application
-            </div>
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100 }}>
+          <div style={{ background: "#fff", borderRadius: 16, padding: 32, width: "100%", maxWidth: 440, boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}>
+            <div style={{ fontWeight: 700, fontSize: 17, color: "#0f172a", marginBottom: 8 }}>Reject Application</div>
             <div style={{ fontSize: 13, color: "#64748b", marginBottom: 20 }}>
               Rejecting <strong>{rejectModal.shopName}</strong>. You can optionally provide a reason.
             </div>
             <textarea
               placeholder="Rejection reason (optional)..."
-              value={rejectReason}
-              onChange={(e) => setRejectReason(e.target.value)}
-              rows={3}
-              style={{
-                width: "100%", padding: "10px 12px", fontSize: 13,
-                border: "1px solid #e5e7eb", borderRadius: 8,
-                fontFamily: "inherit", resize: "vertical", marginBottom: 20,
-              }}
+              value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} rows={3}
+              style={{ width: "100%", padding: "10px 12px", fontSize: 13, border: "1px solid #e5e7eb", borderRadius: 8, fontFamily: "inherit", resize: "vertical", marginBottom: 20 }}
             />
             <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
-              <button
-                onClick={() => setRejectModal(null)}
-                style={{
-                  background: "#f1f5f9", color: "#64748b", border: "none",
-                  borderRadius: 8, padding: "9px 20px", fontSize: 13,
-                  fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
-                }}
-              >Cancel</button>
-              <button
-                onClick={handleReject}
-                style={{
-                  background: "#dc2626", color: "#fff", border: "none",
-                  borderRadius: 8, padding: "9px 20px", fontSize: 13,
-                  fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
-                }}
-              >Confirm Reject</button>
+              <button onClick={() => setRejectModal(null)} style={{ background: "#f1f5f9", color: "#64748b", border: "none", borderRadius: 8, padding: "9px 20px", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>Cancel</button>
+              <button onClick={handleReject} style={{ background: "#dc2626", color: "#fff", border: "none", borderRadius: 8, padding: "9px 20px", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>Confirm Reject</button>
             </div>
           </div>
         </div>

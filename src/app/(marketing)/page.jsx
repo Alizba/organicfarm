@@ -1,7 +1,7 @@
 import Cards from "@/components/home/Cards";
 import Cta from "@/components/home/Cta";
 import Hero from "@/components/home/Hero";
-import Category from "@/components/home/category/Category";
+// import Category from "@/components/home/category/Category";
 import Offers from "@/components/home/Offers";
 import Product from "@/components/home/products/Product";
 import Knowledge from "@/components/home/Knowledge";
@@ -25,9 +25,9 @@ export default async function Home() {
     <Hero/>
     <Cards/>
     <Cta/>
-    <Category/>
-    <Offers/>
+    {/* <Category/> */}
     <Product/>
+    <Offers/>
     <Knowledge/>
     <Deal/>
     <Data/>

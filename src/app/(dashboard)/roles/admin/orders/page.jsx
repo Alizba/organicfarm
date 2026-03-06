@@ -130,6 +130,7 @@ export default function AdminOrdersPage() {
                 fontWeight: n.active ? 700 : 500,
                 color: n.active ? "#0f172a" : "#64748b",
               }}>{n.label}</Link>
+              
             ))}
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 16 }}>

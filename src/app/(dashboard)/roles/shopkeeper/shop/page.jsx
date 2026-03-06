@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import Link from "next/link";
+import ShopkeeperSidebar from "@/components/shopkeeper/ShopkeeperSidebar";
 
 const css = `
   @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500;600;700&display=swap');
@@ -21,13 +22,13 @@ export default function ShopkeeperShopPage() {
   const { user, loading, logout } = useAuth();
   const router = useRouter();
 
-  const [shop, setShop]       = useState(null);
+  const [shop, setShop] = useState(null);
   const [fetching, setFetching] = useState(true);
   const [editing, setEditing] = useState(false);
-  const [saving, setSaving]   = useState(false);
+  const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [error, setError]     = useState(null);
-  const [form, setForm]       = useState({ shopName: "", shopDescription: "", phone: "" });
+  const [error, setError] = useState(null);
+  const [form, setForm] = useState({ shopName: "", shopDescription: "", phone: "" });
 
   useEffect(() => {
     if (!loading && (!user || !["shopkeeper", "admin"].includes(user.role))) {
@@ -44,9 +45,9 @@ export default function ShopkeeperShopPage() {
       const { data } = await axios.get("/api/shopkeeper/shop");
       setShop(data.shop);
       setForm({
-        shopName:        data.shop?.shopName        || "",
+        shopName: data.shop?.shopName || "",
         shopDescription: data.shop?.shopDescription || "",
-        phone:           data.shop?.phone           || "",
+        phone: data.shop?.phone || "",
       });
     } catch (e) {
       console.error(e);
@@ -78,32 +79,7 @@ export default function ShopkeeperShopPage() {
   return (
     <>
       <style>{css}</style>
-      <div style={{ minHeight: "100vh", background: "#fafaf9" }}>
-
-        {/* Nav */}
-        <nav style={{
-          background: "#fff", borderBottom: "1px solid #e5e7eb",
-          padding: "0 40px", height: 60,
-          display: "flex", alignItems: "center", justifyContent: "space-between",
-          position: "sticky", top: 0, zIndex: 50,
-        }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 32 }}>
-            <span style={{ fontFamily: "'Instrument Serif', serif", fontSize: 20, color: "#0f172a" }}>Shopkeeper</span>
-            <Link href="/roles/shopkeeper" className="nav-link" style={{ fontSize: 13, fontWeight: 500, color: "#64748b", textDecoration: "none" }}>Dashboard</Link>
-            <Link href="/roles/shopkeeper/shop" className="nav-link" style={{ fontSize: 13, fontWeight: 700, color: "#0f172a", textDecoration: "none" }}>My Shop</Link>
-            <Link href="/roles/shopkeeper/products" className="nav-link" style={{ fontSize: 13, fontWeight: 500, color: "#64748b", textDecoration: "none" }}>Products</Link>
-            <Link href="/roles/shopkeeper/analytics" className="nav-link" style={{ fontSize: 13, fontWeight: 500, color: "#64748b", textDecoration: "none" }}>Analytics</Link>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-            <span style={{ fontSize: 13, color: "#64748b" }}>{user.userName}</span>
-            <button onClick={logout} className="btn-primary" style={{
-              background: "#0f172a", color: "#fff", border: "none",
-              borderRadius: 8, padding: "7px 16px", fontSize: 12,
-              fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
-            }}>Logout</button>
-          </div>
-        </nav>
-
+      <ShopkeeperSidebar>
         <div style={{ maxWidth: 720, margin: "0 auto", padding: "48px 40px" }}>
 
           {/* Header */}
@@ -170,8 +146,8 @@ export default function ShopkeeperShopPage() {
                   /* ── Edit Form ── */
                   <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
                     {[
-                      { key: "shopName",        label: "Shop Name *",   placeholder: "Your shop name" },
-                      { key: "phone",           label: "Phone",          placeholder: "Contact number" },
+                      { key: "shopName", label: "Shop Name *", placeholder: "Your shop name" },
+                      { key: "phone", label: "Phone", placeholder: "Contact number" },
                     ].map((f) => (
                       <div key={f.key}>
                         <label style={{ fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: 0.5, display: "block", marginBottom: 6 }}>
@@ -244,9 +220,9 @@ export default function ShopkeeperShopPage() {
 
                     {[
                       { label: "Description", value: shop?.shopDescription || "No description added yet." },
-                      { label: "Email",       value: shop?.email || user.email || "—" },
-                      { label: "Phone",       value: shop?.phone || "—" },
-                      { label: "Status",      value: shop?.status || "approved" },
+                      { label: "Email", value: shop?.email || user.email || "—" },
+                      { label: "Phone", value: shop?.phone || "—" },
+                      { label: "Status", value: shop?.status || "approved" },
                       { label: "Member Since", value: shop?.createdAt ? new Date(shop.createdAt).toLocaleDateString("en-PK", { day: "numeric", month: "long", year: "numeric" }) : "—" },
                     ].map((row) => (
                       <div key={row.label} style={{
@@ -274,7 +250,7 @@ export default function ShopkeeperShopPage() {
             </div>
           )}
         </div>
-      </div>
+      </ShopkeeperSidebar>
     </>
   );
 }

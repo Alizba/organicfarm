@@ -1,5 +1,6 @@
 import React from 'react'
 import Image from 'next/image'
+import Link from 'next/link'
 
 const Cards = () => {
     return (
@@ -12,13 +13,17 @@ const Cards = () => {
                             <h3 className='text-orange-400 text-xl text-nowrap font-semibold'>Explore seasonal</h3>
                             <h1 className='font-bold text-2xl text-nowrap'>Organic Vegetable</h1>
                             <h4 className='text-gray-700'>Best for health</h4>
-                            <button className='bg-green-600 px-6 py-2 rounded-2xl my-6 hover:bg-green-700 transitions-colors duration-300 cursor-pointer text-white font-semibold'>shop all </button>
+                            <button className='bg-green-600 px-6 py-2 rounded-2xl my-6 hover:bg-green-700 transitions-colors duration-300 cursor-pointer text-white font-semibold'>
+                                <Link href = "./shop/vegetables">
+                                    shop all
+                                </Link>
+                            </button>
                         </div>
-                        <div className='group-hover:scale-110 transition-transform duration-500'>
+                        <div className=' transition-transform duration-500'>
                             <Image src="/images/card2.png"
-                            alt='cardImg'
-                            width={300}
-                            height={300}/>
+                                alt='cardImg'
+                                width={300}
+                                height={300} />
                         </div>
                     </div>
                 </div>
@@ -30,13 +35,17 @@ const Cards = () => {
                             <h3 className='text-orange-400 text-xl text-nowrap font-semibold'>Explore seasonal</h3>
                             <h1 className='font-bold text-2xl text-nowrap'>Organic Vegetable</h1>
                             <h4 className='text-gray-700'>Best for health</h4>
-                            <button className='bg-green-600 px-6 py-2 rounded-2xl my-6 hover:bg-green-700 transitions-colors duration-300 cursor-pointer text-white font-semibold'>shop all </button>
+                            <button className='bg-green-600 px-6 py-2 rounded-2xl my-6 hover:bg-green-700 transitions-colors duration-300 cursor-pointer text-white font-semibold'>
+                                 <Link href = "./shop/vegetables">
+                                    shop all
+                                </Link>    
+                             </button>
                         </div>
-                        <div className='group-hover:scale-110 transition-transform duration-500'>
+                        <div className='transition-transform duration-500'>
                             <Image src="/images/card1.png"
-                            alt='cardImg'
-                            width={300}
-                            height={300}/>
+                                alt='cardImg'
+                                width={300}
+                                height={300} />
                         </div>
                     </div>
                 </div>
@@ -46,15 +55,19 @@ const Cards = () => {
                     <div className='relative z-10 flex justify-center items-center h-full'>
                         <div className='pl-6 py-10'>
                             <h3 className='text-orange-400 text-xl text-nowrap font-semibold'>Explore seasonal</h3>
-                            <h1 className='font-bold text-2xl text-nowrap'>Organic Vegetable</h1>
+                            <h1 className='font-bold text-2xl text-nowrap'>Organic Fruits</h1>
                             <h4 className='text-gray-700'>Best for health</h4>
-                            <button className='bg-green-600 px-6 py-2 rounded-2xl my-6 hover:bg-green-700 transitions-colors duration-300 cursor-pointer text-white font-semibold'>shop all </button>
+                            <button className='bg-green-600 px-6 py-2 rounded-2xl my-6 hover:bg-green-700 transitions-colors duration-300 cursor-pointer text-white font-semibold'>
+                                 <Link href = "./shop/fruits">
+                                    shop all
+                                </Link>     
+                            </button>
                         </div>
-                        <div className='group-hover:scale-110 transition-transform duration-500'>
+                        <div className=' transition-transform duration-500'>
                             <Image src="/images/card3.png"
-                            alt='cardImg'
-                            width={300}
-                            height={300}/>
+                                alt='cardImg'
+                                width={250}
+                                height={250} />
                         </div>
                     </div>
                 </div>

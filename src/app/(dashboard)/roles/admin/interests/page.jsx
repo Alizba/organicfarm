@@ -96,6 +96,7 @@ export default function AdminInterestsPage() {
             <span style={{ fontFamily: "'Instrument Serif', serif", fontSize: 20, color: "#0f172a" }}>Admin</span>
             <Link href="/roles/admin" className="nav-link" style={{ fontSize: 13, color: "#64748b", textDecoration: "none" }}>Overview</Link>
             <Link href="/roles/admin/interests" className="nav-link" style={{ fontSize: 13, fontWeight: 600, color: "#0f172a", textDecoration: "none" }}>Sell Interests</Link>
+            <Link href="/roles/admin/contact-messages" className="nav-link" style={{ fontSize: 13, fontWeight: 500, color: "#64748b", textDecoration: "none" }}>Contact Messages</Link>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
             <span style={{ fontSize: 13, color: "#64748b" }}>{user.userName}</span>
