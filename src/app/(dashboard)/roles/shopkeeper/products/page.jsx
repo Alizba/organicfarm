@@ -2,7 +2,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
-import ShopkeeperSidebar from "@/components/shopkeeper/ShopkeeperSidebar"; // ✅ fixed typo
+import ShopkeeperSidebar from "@/components/shopkeeper/ShopkeeperSidebar";
 import axios from "axios";
 
 const css = `
@@ -34,10 +34,10 @@ export default function ShopkeeperProductsPage() {
   const [form, setForm]                     = useState(EMPTY_FORM);
   const [imageFile, setImageFile]           = useState(null);
   const [imagePreview, setImagePreview]     = useState(null);
-  const [categories, setCategories]         = useState([]);
+  const [categories, setCategories]         = useState([]); 
   const [catLoading, setCatLoading]         = useState(false);
-  const [customCategory, setCustomCategory] = useState("");
   const [showCustom, setShowCustom]         = useState(false);
+  const [customLabel, setCustomLabel]       = useState("");
 
   useEffect(() => {
     if (!loading && (!user || !["shopkeeper", "admin"].includes(user.role))) {
@@ -61,7 +61,7 @@ export default function ShopkeeperProductsPage() {
     setCatLoading(true);
     try {
       const { data } = await axios.get("/api/shopkeeper/categories");
-      setCategories(data.categories || []);
+      setCategories(data.categories || []); 
     } catch (e) { console.error(e); }
     finally { setCatLoading(false); }
   };
@@ -94,16 +94,30 @@ export default function ShopkeeperProductsPage() {
           reader.readAsDataURL(imageFile);
         });
       }
+
+      let categoryId = form.category; 
+      if (showCustom && customLabel.trim()) {
+        const slug = customLabel.toLowerCase().trim().replace(/\s+/g, "-");
+        const catRes = await axios.post("/api/shopkeeper/categories", {
+          name:  slug,
+          label: customLabel.trim(),
+        });
+        categoryId = catRes.data.category._id;
+        await fetchCategories(); 
+      }
+
       await axios.post("/api/shopkeeper/products", {
         ...form,
+        category:      categoryId,
         price:         parseFloat(form.price),
         originalPrice: form.originalPrice ? parseFloat(form.originalPrice) : undefined,
         stock:         parseInt(form.stock) || 0,
         image:         imageBase64,
       });
-      setForm(EMPTY_FORM); setCustomCategory(""); setShowCustom(false);
+
+      setForm(EMPTY_FORM); setCustomLabel(""); setShowCustom(false);
       clearImage(); setShowForm(false);
-      fetchProducts(); fetchCategories();
+      fetchProducts();
     } catch (e) {
       setError(e?.response?.data?.error || "Failed to save product.");
     } finally { setSaving(false); }
@@ -119,7 +133,7 @@ export default function ShopkeeperProductsPage() {
 
   const resetForm = () => {
     setShowForm(false); setForm(EMPTY_FORM);
-    setCustomCategory(""); setShowCustom(false);
+    setCustomLabel(""); setShowCustom(false);
     clearImage(); setError(null);
   };
 
@@ -127,10 +141,12 @@ export default function ShopkeeperProductsPage() {
     if (value === "__new__") {
       setShowCustom(true); setForm((p) => ({ ...p, category: "" }));
     } else {
-      setShowCustom(false); setCustomCategory("");
-      setForm((p) => ({ ...p, category: value }));
+      setShowCustom(false); setCustomLabel("");
+      setForm((p) => ({ ...p, category: value })); 
     }
   };
+
+  const selectedCat = categories.find((c) => c._id === form.category);
 
   if (loading || !user) return <Loader />;
 
@@ -140,7 +156,6 @@ export default function ShopkeeperProductsPage() {
   return (
     <>
       <style>{css}</style>
-      {/* ✅ ShopkeeperSidebar WRAPS the content */}
       <ShopkeeperSidebar>
         <div style={{ padding: "48px 40px" }}>
 
@@ -181,35 +196,44 @@ export default function ShopkeeperProductsPage() {
                 <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp" onChange={handleImageChange} style={{ display: "none" }} />
               </div>
 
-              {/* Fields */}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
                 <div><label style={labelStyle}>Product Name *</label><input className="input" placeholder="e.g. Hazelnut" value={form.name} onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))} style={inputStyle} /></div>
                 <div><label style={labelStyle}>Price (Rs.) *</label><input className="input" type="number" placeholder="e.g. 300" value={form.price} onChange={(e) => setForm((p) => ({ ...p, price: e.target.value }))} style={inputStyle} /></div>
                 <div><label style={labelStyle}>Original Price</label><input className="input" type="number" placeholder="e.g. 450" value={form.originalPrice} onChange={(e) => setForm((p) => ({ ...p, originalPrice: e.target.value }))} style={inputStyle} /></div>
                 <div><label style={labelStyle}>Stock Qty</label><input className="input" type="number" placeholder="e.g. 20" value={form.stock} onChange={(e) => setForm((p) => ({ ...p, stock: e.target.value }))} style={inputStyle} /></div>
 
-                {/* Category dropdown */}
+                {/* ── Category dropdown ── */}
                 <div>
-                  <label style={labelStyle}>Category {catLoading && <span style={{ marginLeft: 6, fontSize: 10, color: "#94a3b8", fontWeight: 400 }}>loading…</span>}</label>
+                  <label style={labelStyle}>
+                    Category
+                    {catLoading && <span style={{ marginLeft: 6, fontSize: 10, color: "#94a3b8", fontWeight: 400 }}>loading…</span>}
+                  </label>
                   {!showCustom ? (
-                    <select className="input" value={form.category} onChange={(e) => handleCategorySelect(e.target.value)} style={{ ...inputStyle, cursor: "pointer", color: form.category ? "#0f172a" : "#94a3b8" }}>
+                    <select className="input" value={form.category} onChange={(e) => handleCategorySelect(e.target.value)}
+                      style={{ ...inputStyle, cursor: "pointer", color: form.category ? "#0f172a" : "#94a3b8" }}>
                       <option value="" disabled>Select a category</option>
-                      {categories.map((cat) => <option key={cat} value={cat}>{cat.charAt(0).toUpperCase() + cat.slice(1)}</option>)}
+                      {categories.map((cat) => (
+                        <option key={cat._id} value={cat._id}>
+                          {cat.icon} {cat.label}
+                        </option>
+                      ))}
                       <option value="__new__">+ Add new category…</option>
                     </select>
                   ) : (
                     <div style={{ display: "flex", gap: 6 }}>
-                      <input className="input" placeholder="Type new category name" value={customCategory}
-                        onChange={(e) => { setCustomCategory(e.target.value); setForm((p) => ({ ...p, category: e.target.value.toLowerCase().trim() })); }}
+                      <input className="input" placeholder="e.g. Spices" value={customLabel}
+                        onChange={(e) => setCustomLabel(e.target.value)}
                         style={{ ...inputStyle, flex: 1 }} autoFocus
                       />
-                      <button onClick={() => { setShowCustom(false); setCustomCategory(""); setForm((p) => ({ ...p, category: "" })); }}
-                        style={{ padding: "0 10px", background: "#f1f5f9", border: "1px solid #e5e7eb", borderRadius: 8, cursor: "pointer", fontSize: 13, color: "#64748b" }} title="Back to dropdown">↩</button>
+                      <button onClick={() => { setShowCustom(false); setCustomLabel(""); setForm((p) => ({ ...p, category: "" })); }}
+                        style={{ padding: "0 10px", background: "#f1f5f9", border: "1px solid #e5e7eb", borderRadius: 8, cursor: "pointer", fontSize: 13, color: "#64748b" }} title="Back">↩</button>
                     </div>
                   )}
-                  {form.category && !showCustom && (
+                  {selectedCat && !showCustom && (
                     <div style={{ marginTop: 6 }}>
-                      <span style={{ background: "#f0fdf4", color: "#16a34a", fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 99 }}>{form.category}</span>
+                      <span style={{ background: "#f0fdf4", color: "#16a34a", fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 99 }}>
+                        {selectedCat.icon} {selectedCat.label}
+                      </span>
                     </div>
                   )}
                 </div>
@@ -252,7 +276,8 @@ export default function ShopkeeperProductsPage() {
                   {products.map((p, i) => (
                     <tr key={p._id} className="row" style={{ borderBottom: i < products.length - 1 ? "1px solid #f8fafc" : "none", background: "#fff", transition: "background 0.15s" }}>
                       <td style={{ padding: "12px 20px" }}>
-                        {p.image ? <img src={p.image} alt={p.name} style={{ width: 48, height: 48, objectFit: "cover", borderRadius: 8, border: "1px solid #e5e7eb" }} />
+                        {p.image
+                          ? <img src={p.image} alt={p.name} style={{ width: 48, height: 48, objectFit: "cover", borderRadius: 8, border: "1px solid #e5e7eb" }} />
                           : <div style={{ width: 48, height: 48, borderRadius: 8, background: "#f1f5f9", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>📦</div>}
                       </td>
                       <td style={{ padding: "14px 20px" }}>
@@ -260,8 +285,12 @@ export default function ShopkeeperProductsPage() {
                         {p.description && <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 2 }}>{p.description.length > 50 ? p.description.slice(0, 50) + "…" : p.description}</div>}
                       </td>
                       <td style={{ padding: "14px 20px" }}>
-                        {p.category ? <span style={{ background: "#f0fdf4", color: "#16a34a", fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 99 }}>{p.category}</span>
-                          : <span style={{ color: "#94a3b8", fontSize: 13 }}>—</span>}
+                        {/* ✅ p.category is now a populated object */}
+                        {p.category ? (
+                          <span style={{ background: "#f0fdf4", color: "#16a34a", fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 99 }}>
+                            {p.category?.icon} {p.category?.label || p.category?.name}
+                          </span>
+                        ) : <span style={{ color: "#94a3b8", fontSize: 13 }}>—</span>}
                       </td>
                       <td style={{ padding: "14px 20px" }}>
                         <div style={{ fontSize: 13, fontWeight: 600, color: "#0f172a" }}>Rs. {p.price?.toLocaleString()}</div>
@@ -282,7 +311,7 @@ export default function ShopkeeperProductsPage() {
             )}
           </div>
         </div>
-      </ShopkeeperSidebar> {/* ✅ closing tag wraps everything */}
+      </ShopkeeperSidebar>
     </>
   );
 }

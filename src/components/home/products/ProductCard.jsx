@@ -11,9 +11,9 @@ export default function ProductCard({ product }) {
   const { addToCart } = useCart();
   const [showModal, setShowModal] = useState(false);
 
-  const hasDiscount  = product.originalPrice && product.originalPrice > product.price;
+  const hasDiscount = product.originalPrice && product.originalPrice > product.price;
   const isOutOfStock = product.instock === false;
-  const discountPct  = hasDiscount
+  const discountPct = hasDiscount
     ? Math.round((1 - product.price / product.originalPrice) * 100)
     : null;
 
@@ -95,9 +95,8 @@ export default function ProductCard({ product }) {
           <Button
             disabled={isOutOfStock}
             onClick={handleAddToCart}
-            className={`group relative overflow-hidden transition-all duration-300 ease-in-out cursor-pointer flex-1 ${
-              isOutOfStock ? "bg-gray-300 cursor-not-allowed" : "bg-green-500 hover:bg-orange-400"
-            }`}
+            className={`group relative overflow-hidden transition-all duration-300 ease-in-out cursor-pointer flex-1 ${isOutOfStock ? "bg-gray-300 cursor-not-allowed" : "bg-green-500 hover:bg-orange-400"
+              }`}
           >
             <span className="group-hover:opacity-0 group-hover:scale-0 transition-all duration-300">
               {isOutOfStock ? "Out of stock" : "Add to Cart"}
@@ -191,7 +190,9 @@ export default function ProductCard({ product }) {
                   <span className="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-sm font-medium">{product.weight}</span>
                 )}
                 {product.category && (
-                  <span className="bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-sm font-medium capitalize">{product.category}</span>
+                  <span className="bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-sm font-medium capitalize">
+                    {product.category?.label || product.category?.name || product.category}
+                  </span>
                 )}
                 {product.stock > 0 && (
                   <span className="bg-green-50 text-green-600 px-3 py-1 rounded-full text-sm font-medium">{product.stock} in stock</span>
@@ -210,11 +211,10 @@ export default function ProductCard({ product }) {
                 <button
                   disabled={isOutOfStock}
                   onClick={handleAddToCart}
-                  className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-sm transition-all duration-200 ${
-                    isOutOfStock
+                  className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-sm transition-all duration-200 ${isOutOfStock
                       ? "bg-gray-100 text-gray-400 cursor-not-allowed"
                       : "bg-green-500 hover:bg-green-600 text-white cursor-pointer"
-                  }`}
+                    }`}
                 >
                   <ShoppingCart className="w-4 h-4" />
                   {isOutOfStock ? "Out of Stock" : "Add to Cart"}

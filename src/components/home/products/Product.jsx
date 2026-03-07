@@ -25,6 +25,8 @@ export default function Product() {
   const [loading, setLoading]     = useState(true);
   const [error, setError]         = useState(null);
 
+  const [allCategories, setAllCategories] = useState([]);
+
   const [search, setSearch]           = useState("");
   const [sort, setSort]               = useState("default");
   const [priceLimit, setPriceLimit]   = useState(10000);
@@ -33,13 +35,39 @@ export default function Product() {
   const [inStockOnly, setInStockOnly] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
 
+  // Fetch all categories once on mount
+  useEffect(() => {
+    fetch("/api/categories")
+      .then((r) => r.json())
+      .then((d) => setAllCategories(d.categories || []))
+      .catch((e) => console.error("Failed to load categories", e));
+  }, []);
+
   const fetchProducts = useCallback(async (tab) => {
     setLoading(true);
     setError(null);
     setSearch(""); setSort("default"); setVegOnly(false); setInStockOnly(false);
     try {
-      const category = TAB_TO_CATEGORY[tab] || tab;
-      const res  = await fetch(`/api/customer/shop?category=${category}`);
+      const slug = TAB_TO_CATEGORY[tab] || tab;
+
+      let categoryId = null;
+      if (allCategories.length > 0) {
+        const found = allCategories.find((c) => c.name === slug);
+        categoryId = found?._id;
+      } else {
+        const res  = await fetch("/api/categories");
+        const data = await res.json();
+        const found = (data.categories || []).find((c) => c.name === slug);
+        categoryId = found?._id;
+      }
+
+      if (!categoryId) {
+        setProducts([]);
+        setLoading(false);
+        return;
+      }
+
+      const res  = await fetch(`/api/customer/shop?category=${categoryId}`);
       if (!res.ok) throw new Error("Failed to load products");
       const data = await res.json();
       const list = data.products || [];
@@ -54,9 +82,12 @@ export default function Product() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [allCategories]);
 
-  useEffect(() => { fetchProducts(activeTab); }, [activeTab, fetchProducts]);
+  useEffect(() => {
+    // Wait until categories are loaded before fetching products
+    if (allCategories.length > 0) fetchProducts(activeTab);
+  }, [activeTab, allCategories]);
 
   const filtered = useMemo(() => {
     let result = [...products];
@@ -76,8 +107,10 @@ export default function Product() {
   }, [products, search, priceLimit, sort, vegOnly, inStockOnly]);
 
   const activeFilterCount = [
-    search, priceLimit < maxPrice ? "p" : "",
-    vegOnly ? "v" : "", inStockOnly ? "s" : "",
+    search,
+    priceLimit < maxPrice ? "p" : "",
+    vegOnly ? "v" : "",
+    inStockOnly ? "s" : "",
     sort !== "default" ? "o" : "",
   ].filter(Boolean).length;
 
@@ -89,7 +122,6 @@ export default function Product() {
   return (
     <section className="py-16 px-4 md:px-16 bg-gray-50">
 
-      {/* Header */}
       <div className="text-center mb-12">
         <h1 className="text-2xl md:text-3xl font-bold text-green-700 mb-4">Farm Fresh Products</h1>
         <p className="text-gray-600 text-xs max-w-2xl mx-auto">
@@ -97,13 +129,11 @@ export default function Product() {
         </p>
       </div>
 
-      {/* Tabs */}
       <ProductTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
       <div className="bg-white rounded-2xl border border-gray-200 shadow-sm mb-6 overflow-hidden">
         <div className="flex flex-wrap items-center gap-3 px-4 py-3">
 
-          {/* Search */}
           <div className="relative flex-1 min-w-44">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
@@ -148,14 +178,12 @@ export default function Product() {
 
         {showFilters && (
           <div className="border-t border-gray-100 px-4 py-4 flex flex-wrap gap-6 items-end bg-gray-50">
-
             <div className="flex-1 min-w-52">
               <div className="flex justify-between items-center mb-2">
                 <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Max Price</label>
                 <span className="text-sm font-bold text-green-700">Rs. {priceLimit.toLocaleString()}</span>
               </div>
-              <input
-                type="range" min={0} max={maxPrice} step={50} value={priceLimit}
+              <input type="range" min={0} max={maxPrice} step={50} value={priceLimit}
                 onChange={(e) => setPriceLimit(Number(e.target.value))}
                 className="w-full h-1 rounded-full outline-none cursor-pointer accent-green-700"
               />
@@ -166,8 +194,8 @@ export default function Product() {
 
             <div className="flex gap-3 flex-wrap">
               {[
-                { label: "🌿 Veg Only",      active: vegOnly,     set: setVegOnly },
-                { label: "✅ In Stock Only",  active: inStockOnly, set: setInStockOnly },
+                { label: "🌿 Veg Only",     active: vegOnly,     set: setVegOnly },
+                { label: "✅ In Stock Only", active: inStockOnly, set: setInStockOnly },
               ].map((t) => (
                 <button key={t.label} onClick={() => t.set((v) => !v)}
                   className={`px-4 py-2 rounded-xl text-sm font-medium border transition-all cursor-pointer ${
@@ -201,9 +229,7 @@ export default function Product() {
       {!loading && error && (
         <div className="text-center py-16">
           <p className="text-red-500 text-lg mb-4">{error}</p>
-          <button onClick={() => fetchProducts(activeTab)} className="bg-green-600 text-white px-6 py-2 rounded-xl text-sm font-semibold hover:bg-green-700 transition-colors cursor-pointer">
-            Retry
-          </button>
+          <button onClick={() => fetchProducts(activeTab)} className="bg-green-600 text-white px-6 py-2 rounded-xl text-sm font-semibold hover:bg-green-700 transition-colors cursor-pointer">Retry</button>
         </div>
       )}
 
@@ -211,9 +237,7 @@ export default function Product() {
         <div className="text-center py-16">
           <div className="text-4xl mb-3">🔍</div>
           <p className="text-gray-500 text-lg mb-4">No products match your filters</p>
-          <button onClick={resetFilters} className="bg-green-600 text-white px-6 py-2 rounded-xl text-sm font-semibold hover:bg-green-700 transition-colors cursor-pointer">
-            Reset Filters
-          </button>
+          <button onClick={resetFilters} className="bg-green-600 text-white px-6 py-2 rounded-xl text-sm font-semibold hover:bg-green-700 transition-colors cursor-pointer">Reset Filters</button>
         </div>
       )}
 
