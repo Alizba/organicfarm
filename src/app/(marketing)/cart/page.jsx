@@ -98,7 +98,9 @@ export default function CartPage() {
                       <div>
                         <h3 className="font-semibold text-[#1a2e1a] text-sm leading-tight truncate">{item.name}</h3>
                         {item.category && (
-                          <span className="text-xs text-stone-400 mt-0.5 block">{item.category}</span>
+                          <span className="text-xs text-stone-400 mt-0.5 block">
+                            {item.category?.label || item.category?.name || item.category}
+                          </span>
                         )}
                       </div>
                       <button
