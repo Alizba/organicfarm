@@ -89,7 +89,7 @@ export default function DealCard({ product }) {
           </div>
         </div>
 
-        {deal?.dealEndsAt && <DealCountdown endsAt={deal.dealEndsAt} />}
+        {/* {deal?.dealEndsAt && <DealCountdown endsAt={deal.dealEndsAt} />} */}
 
         <button
           onClick={handleAddToCart}
@@ -110,37 +110,3 @@ export default function DealCard({ product }) {
     </div>
   );
 }
-
-function DealCountdown({ endsAt }) {
-  const [timeLeft, setTimeLeft] = React.useState(getTimeLeft(endsAt));
-
-  React.useEffect(() => {
-    const id = setInterval(() => setTimeLeft(getTimeLeft(endsAt)), 1000);
-    return () => clearInterval(id);
-  }, [endsAt]);
-
-  if (!timeLeft) return null;
-
-  return (
-    <div className="flex gap-2 justify-center">
-      {[["H", timeLeft.hours], ["M", timeLeft.minutes], ["S", timeLeft.seconds]].map(([label, val]) => (
-        <div key={label} className="flex flex-col items-center bg-green-50 border border-green-200 rounded-lg px-2 py-1 min-w-10">
-          <span className="text-base font-bold text-green-700 leading-none">{String(val).padStart(2, "0")}</span>
-          <span className="text-[9px] text-green-500 font-semibold uppercase">{label}</span>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function getTimeLeft(endsAt) {
-  const diff = new Date(endsAt) - new Date();
-  if (diff <= 0) return null;
-  return {
-    hours:   Math.floor(diff / 3600000),
-    minutes: Math.floor((diff % 3600000) / 60000),
-    seconds: Math.floor((diff % 60000) / 1000),
-  };
-}
-
-import React from "react";

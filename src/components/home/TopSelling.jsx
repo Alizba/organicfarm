@@ -207,8 +207,8 @@ export default function TopSelling() {
           </div>
         ) : (
           <div style={{ display: "flex", gap: 14, maxWidth: 1360, margin: "0 auto", flexWrap: "wrap" }}>
-            <Panel products={left}  loading={loading} bgImage="/images/tsBg.jpg"  onShopClick={() => router.push("/shop/vegetables")} />
-            <Panel products={right} loading={loading} bgImage="/images/tsBg1.png" onShopClick={() => router.push("/shop/fruits")} />
+            <Panel products={left}  loading={loading} bgImage="/images/tsBg.jpg"  onShopClick={() => router.push("/shop")} />
+            <Panel products={right} loading={loading} bgImage="/images/tsBg1.png" onShopClick={() => router.push("/shop")} />
           </div>
         )}
       </section>
