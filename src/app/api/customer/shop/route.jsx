@@ -5,29 +5,21 @@ import Product from "@/models/Product";
 export async function GET(request) {
   try {
     await connect();
-
     const { searchParams } = new URL(request.url);
-    const category = searchParams.get("category");
-    const search   = searchParams.get("search");
+    const category   = searchParams.get("category");
+    const shopkeeper = searchParams.get("shopkeeper");
 
-    const query = { instock: true };
-
-    if (category && category !== "all") {
-      query.category = category; 
-    }
-
-    if (search) {
-      query.name = { $regex: search, $options: "i" };
-    }
+    const query = {};
+    if (category)   query.category   = category;
+    if (shopkeeper) query.shopkeeper = shopkeeper;
 
     const products = await Product.find(query)
-      .populate("category", "name label icon gradient")
-      .select("-__v")
-      .sort({ createdAt: -1 });
+      .populate("category", "name label icon")
+      .sort({ createdAt: -1 })
+      .lean();
 
-    return NextResponse.json({ success: true, count: products.length, products });
+    return NextResponse.json({ success: true, products });
   } catch (error) {
-    console.error("Shop products fetch error:", error);
-    return NextResponse.json({ success: false, error: "Failed to fetch products" }, { status: 500 });
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

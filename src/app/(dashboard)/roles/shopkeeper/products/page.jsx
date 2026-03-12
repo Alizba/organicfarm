@@ -86,7 +86,6 @@ export default function ShopkeeperProductsPage() {
     finally { setCatLoading(false); }
   };
 
-  // ── Add form handlers ──────────────────────────────────────────────────
   const handleImageChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -169,7 +168,6 @@ export default function ShopkeeperProductsPage() {
     }
   };
 
-  // ── Edit modal handlers ────────────────────────────────────────────────
   const openEdit = (p) => {
     setEditProduct(p);
     setEditError(null);
@@ -218,7 +216,7 @@ export default function ShopkeeperProductsPage() {
     if (!editForm.name || !editForm.price) return setEditError("Name and price are required.");
     setEditSaving(true); setEditError(null);
     try {
-      let imageBase64 = undefined; // undefined = don't change image
+      let imageBase64 = undefined; 
       if (editImageFile) {
         imageBase64 = await new Promise((resolve, reject) => {
           const reader = new FileReader();
@@ -429,7 +427,6 @@ export default function ShopkeeperProductsPage() {
         </div>
       </ShopkeeperSidebar>
 
-      {/* ── Edit Modal ──────────────────────────────────────────────────── */}
       {editProduct && editForm && (
         <div className="modal-overlay" onClick={closeEdit}>
           <div className="modal-box" onClick={(e) => e.stopPropagation()}>
