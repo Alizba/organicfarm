@@ -5,10 +5,10 @@ import ShopRequest from "@/models/ShopRequest";
 import bcryptjs from "bcryptjs";
 import jwt from "jsonwebtoken";
 
-connect();
-
 export async function POST(request) {
   try {
+    await connect();
+
     const { email, password } = await request.json();
 
     if (!email || !password) {
@@ -61,12 +61,12 @@ export async function POST(request) {
     }
 
     const tokenData = {
-      id:          user._id,
-      email:       user.email,
-      userName:    user.userName, 
-      role:        user.role,        
-      shopName:    user.shopName || null,   
-      shopDescription: user.shopDescription || null, 
+      id:              user._id,
+      email:           user.email,
+      userName:        user.userName,
+      role:            user.role,
+      shopName:        user.shopName        || null,
+      shopDescription: user.shopDescription || null,
     };
 
     const token = jwt.sign(tokenData, process.env.TOKEN_SECRET, {
