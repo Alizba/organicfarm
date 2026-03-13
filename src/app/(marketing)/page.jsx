@@ -23,16 +23,16 @@ export default async function Home() {
   return (
     <>
     <Hero/>
+    <Product/>
+    <Deal/>
+    <TopSelling/>
     <Cards/>
     <Cta/>
     {/* <Category/> */}
-    <Product/>
-    <Offers/>
     <Knowledge/>
-    <Deal/>
-    <Data/>
+    <Offers/>
     <Partners/>
-    <TopSelling/>
+    <Data/>
     <Contact/>
     </>
   );

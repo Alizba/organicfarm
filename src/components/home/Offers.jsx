@@ -7,7 +7,7 @@ import Link from 'next/link'
 
 const Offers = () => {
     return (
-        <section className='bg-linear-to-br from-orange-200 via-orange-300 to-orange-200 w-full my-16 py-12 px-6 shadow-lg overflow-hidden relative'>
+        <section className='bg-linear-to-br from-orange-200 via-orange-300 to-orange-200 w-full py-12 px-6 shadow-lg overflow-hidden relative'>
             {/* Decorative background elements */}
             <div className='absolute top-0 right-0 w-64 h-64 bg-orange-400 rounded-full blur-3xl opacity-20'></div>
             <div className='absolute bottom-0 left-0 w-48 h-48 bg-yellow-300 rounded-full blur-3xl opacity-20'></div>

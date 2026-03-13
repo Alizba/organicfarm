@@ -120,7 +120,7 @@ export default function Product() {
   };
 
   return (
-    <section className="py-16 px-4 md:px-16 bg-gray-50">
+    <section className="pb-16 pt-10 px-4 md:px-16 bg-gray-100">
 
       <div className="text-center mb-12">
         <h1 className="text-2xl md:text-3xl font-bold text-green-700 mb-4">Farm Fresh Products</h1>
