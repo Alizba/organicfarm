@@ -9,7 +9,7 @@ const nextConfig = {
   // Increase body size limit so base64 images (up to 2MB) can be sent via API
   experimental: {
     serverActions: {
-      bodySizeLimit: "4mb",
+      bodySizeLimit: "10mb",
     },
   },
   api: {

@@ -1,7 +1,14 @@
 import { NextResponse } from "next/server";
 import { connect } from "@/dbConfig/dbConfig";
 import Blog from "@/models/Blog";
-import { getDataFromToken } from "@/helpers/getDataFromToken";
+import jwt from "jsonwebtoken";
+
+function getToken(request) {
+  const token = request.cookies.get("token")?.value || "";
+  if (!token) return null;
+  try { return jwt.verify(token, process.env.TOKEN_SECRET); }
+  catch { return null; }
+}
 
 function makeSlug(title) {
   return title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") + "-" + Date.now();
@@ -10,7 +17,7 @@ function makeSlug(title) {
 export async function GET(request) {
   try {
     await connect();
-    const tokenData = getDataFromToken(request);
+    const tokenData = getToken(request);
     if (!tokenData || tokenData.role !== "admin")
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     const posts = await Blog.find().sort({ createdAt: -1 }).lean();
@@ -23,7 +30,7 @@ export async function GET(request) {
 export async function POST(request) {
   try {
     await connect();
-    const tokenData = getDataFromToken(request);
+    const tokenData = getToken(request);
     if (!tokenData || tokenData.role !== "admin")
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -50,7 +57,7 @@ export async function POST(request) {
 export async function PATCH(request) {
   try {
     await connect();
-    const tokenData = getDataFromToken(request);
+    const tokenData = getToken(request);
     if (!tokenData || tokenData.role !== "admin")
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -66,7 +73,7 @@ export async function PATCH(request) {
 export async function DELETE(request) {
   try {
     await connect();
-    const tokenData = getDataFromToken(request);
+    const tokenData = getToken(request);
     if (!tokenData || tokenData.role !== "admin")
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
