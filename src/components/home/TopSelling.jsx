@@ -10,80 +10,45 @@ const splitHalf = (arr) => {
 
 function SkeletonRow() {
   return (
-    <div style={{
-      display: "flex", alignItems: "center", gap: 14,
-      background: "#fff", borderRadius: 14, padding: "12px 16px",
-      border: "1px solid #f1f5f9",
-    }}>
-      <div style={{ width: 18, height: 18, borderRadius: "50%", background: "#f1f5f9", flexShrink: 0 }} />
-      <div style={{ width: 52, height: 52, borderRadius: 10, background: "#f1f5f9", flexShrink: 0 }} />
-      <div style={{ flex: 1 }}>
-        <div style={{ height: 11, background: "#f1f5f9", borderRadius: 4, width: "55%", marginBottom: 6 }} />
-        <div style={{ height: 10, background: "#f1f5f9", borderRadius: 4, width: "30%" }} />
+    <div className="flex items-center gap-3 bg-white rounded-2xl p-3 border border-slate-100 animate-pulse">
+      <div className="w-5 h-5 rounded-full bg-slate-100 shrink-0" />
+      <div className="w-12 h-12 rounded-xl bg-slate-100 shrink-0" />
+      <div className="flex-1">
+        <div className="h-3 bg-slate-100 rounded w-1/2 mb-2" />
+        <div className="h-2 bg-slate-100 rounded w-1/3" />
       </div>
-      <div style={{ width: 52, height: 11, background: "#f1f5f9", borderRadius: 4 }} />
+      <div className="w-12 h-3 bg-slate-100 rounded" />
     </div>
   );
 }
 
 function ProductRow({ product }) {
   const isTop3 = product.rank <= 3;
-  const rankColors = ["#f59e0b", "#94a3b8", "#cd7c2f"];
-  const rankColor  = isTop3 ? rankColors[product.rank - 1] : "#cbd5e1";
+  const rankBg = ["bg-amber-400", "bg-slate-400", "bg-amber-700"];
 
   return (
-    <div className="ts-row" style={{
-      display: "flex", alignItems: "center", gap: 14,
-      background: "#fff", borderRadius: 14,
-      padding: "11px 16px",
-      border: "1px solid #f1f5f9",
-      transition: "all 0.2s",
-    }}>
-      {/* Rank */}
-      <div style={{
-        width: 22, height: 22, borderRadius: "50%", flexShrink: 0,
-        background: isTop3 ? rankColor : "#f8fafc",
-        display: "flex", alignItems: "center", justifyContent: "center",
-        fontSize: 9, fontWeight: 800,
-        color: isTop3 ? "#fff" : "#94a3b8",
-        boxShadow: isTop3 ? `0 2px 6px ${rankColor}55` : "none",
-      }}>#{product.rank}</div>
-
-      {/* Image */}
-      <div style={{
-        position: "relative", width: 50, height: 50, flexShrink: 0,
-        borderRadius: 10, overflow: "hidden",
-        background: "linear-gradient(135deg, #f0fdf4, #f8fafc)",
-        border: "1px solid #e5e7eb",
-      }}>
-        {product.image ? (
-          <Image src={product.image} alt={product.name} fill style={{ objectFit: "contain", padding: 4 }} />
-        ) : (
-          <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>🌿</div>
-        )}
+    <div className="flex items-center gap-3 bg-white rounded-2xl p-3 border border-slate-100 hover:border-emerald-400 hover:shadow-md hover:translate-x-0.5 transition-all duration-200">
+      <div className={`w-6 h-6 rounded-full shrink-0 flex items-center justify-center text-[9px] font-black ${isTop3 ? `${rankBg[product.rank - 1]} text-white` : "bg-slate-50 text-slate-400"}`}>
+        #{product.rank}
       </div>
-
-      {/* Name + sold */}
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 13, fontWeight: 600, color: "#0f172a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-          {product.name}
-        </div>
-        <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 2, display: "flex", alignItems: "center", gap: 4 }}>
-          <span style={{ display: "inline-block", width: 6, height: 6, borderRadius: "50%", background: "#10b981" }} />
+      <div className="relative w-12 h-12 shrink-0 rounded-xl overflow-hidden bg-linear-to-br from-green-50 to-slate-50 border border-gray-100">
+        {product.image
+          ? <Image src={product.image} alt={product.name} fill className="object-contain p-1" />
+          : <div className="w-full h-full flex items-center justify-center text-lg">🌿</div>
+        }
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-semibold text-slate-900 truncate">{product.name}</p>
+        <p className="text-xs text-slate-400 mt-0.5 flex items-center gap-1">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
           {product.totalSold} sold
-        </div>
+        </p>
       </div>
-
-      {/* Price */}
-      <div style={{ textAlign: "right", flexShrink: 0 }}>
-        {product.originalPrice && product.originalPrice > product.price && (
-          <div style={{ fontSize: 10, color: "#cbd5e1", textDecoration: "line-through", marginBottom: 1 }}>
-            Rs. {product.originalPrice.toLocaleString()}
-          </div>
+      <div className="text-right shrink-0">
+        {product.originalPrice > product.price && (
+          <p className="text-[10px] text-slate-300 line-through">Rs. {product.originalPrice.toLocaleString()}</p>
         )}
-        <div style={{ fontSize: 13, fontWeight: 700, color: "#059669" }}>
-          Rs. {product.price?.toLocaleString()}
-        </div>
+        <p className="text-sm font-bold text-emerald-600">Rs. {product.price?.toLocaleString()}</p>
       </div>
     </div>
   );
@@ -91,56 +56,36 @@ function ProductRow({ product }) {
 
 function Panel({ products, bgImage, loading, onShopClick }) {
   return (
-    <div style={{
-      flex: 1, minWidth: 0,
-      display: "grid",
-      gridTemplateColumns: "1fr 260px",
-      gap: 12,
-      background: "#f8fafc",
-      padding: 14,
-      borderRadius: 20,
-      boxShadow: "0 2px 16px rgba(0,0,0,0.06)",
-      alignItems: "stretch", 
-    }}>
-
-      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+    <div className="flex-1 min-w-0 grid grid-cols-1 sm:grid-cols-[1fr_200px] lg:grid-cols-[1fr_220px] gap-3 bg-slate-50 p-3 rounded-2xl shadow-sm">
+      {/* Product list */}
+      <div className="flex flex-col gap-2">
         {loading
           ? Array.from({ length: 3 }).map((_, i) => <SkeletonRow key={i} />)
           : products.length === 0
-            ? <div style={{ padding: "24px 0", textAlign: "center", color: "#cbd5e1", fontSize: 13 }}>No data yet</div>
+            ? <p className="text-center text-slate-300 text-sm py-6">No data yet</p>
             : products.map((p) => <ProductRow key={p._id?.toString()} product={p} />)
         }
       </div>
 
-      <div style={{
-        position: "relative", borderRadius: 16, overflow: "hidden",
-        minHeight: 180,   
-      }}>
+      {/* Promo card */}
+      <div className="relative rounded-2xl overflow-hidden min-h-40">
         {bgImage
-          ? <div style={{ position: "absolute", inset: 0, backgroundImage: `url('${bgImage}')`, backgroundSize: "cover", backgroundPosition: "center" }} />
-          : <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, #064e3b, #0f172a)" }} />
+          ? <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url('${bgImage}')` }} />
+          : <div className="absolute inset-0 bg-linear-to-br from-emerald-900 to-slate-900" />
         }
-        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.35) 55%, transparent 100%)" }} />
-        <div style={{ position: "relative", height: "100%", display: "flex", flexDirection: "column", justifyContent: "flex-end", padding: "20px 18px" }}>
-          <p style={{ fontSize: 9, letterSpacing: "0.35em", textTransform: "uppercase", color: "#10b981", marginBottom: 6 }}>Limited Time</p>
-          <h3 style={{ fontSize: 22, fontWeight: 800, color: "#fff", lineHeight: 1.15, margin: "0 0 6px" }}>
-            Save up to{" "}
-            <span style={{ color: "#10b981", fontStyle: "italic" }}>50% Off</span>
+        <div className="absolute inset-0 bg-linear-to-t from-black/85 via-black/30 to-transparent" />
+        <div className="relative h-full flex flex-col justify-end p-4">
+          <p className="text-[9px] tracking-widest uppercase text-emerald-400 mb-1">Limited Time</p>
+          <h3 className="text-lg font-black text-white leading-tight mb-1">
+            Save up to <span className="text-emerald-400 italic">50% Off</span>
           </h3>
-          <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 11, marginBottom: 16 }}>Exclusive deals on top-rated products.</p>
+          <p className="text-white/50 text-xs mb-3">Exclusive deals on top products.</p>
           <button
             onClick={onShopClick}
-            style={{
-              width: "100%", background: "#10b981",
-              color: "#fff", fontWeight: 700, fontSize: 10,
-              letterSpacing: "0.15em", textTransform: "uppercase",
-              padding: "11px 0", borderRadius: 10,
-              border: "none", cursor: "pointer",
-              transition: "background 0.2s",
-            }}
-            onMouseEnter={(e) => e.currentTarget.style.background = "#059669"}
-            onMouseLeave={(e) => e.currentTarget.style.background = "#10b981"}
-          >Shop the Sale</button>
+            className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-[10px] tracking-widest uppercase py-2.5 rounded-xl transition-colors cursor-pointer"
+          >
+            Shop the Sale
+          </button>
         </div>
       </div>
     </div>
@@ -149,8 +94,8 @@ function Panel({ products, bgImage, loading, onShopClick }) {
 
 export default function TopSelling() {
   const [products, setProducts] = useState([]);
-  const [loading, setLoading]   = useState(true);
-  const [error, setError]       = useState(null);
+  const [loading,  setLoading]  = useState(true);
+  const [error,    setError]    = useState(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -168,50 +113,33 @@ export default function TopSelling() {
   const totalSold = products.reduce((s, p) => s + p.totalSold, 0);
 
   return (
-    <>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap');
-        .ts-row:hover {
-          border-color: #10b981 !important;
-          box-shadow: 0 2px 10px rgba(16,185,129,0.08) !important;
-          transform: translateX(2px);
-        }
-      `}</style>
+    <section className="py-16 px-4 md:px-6 bg-white">
 
-      <section style={{ padding: "72px 24px", background: "#fff" }}>
-
-        {/* Header */}
-        <div style={{ textAlign: "center", marginBottom: 48 }}>
-          <p style={{ fontSize: 10, letterSpacing: "0.45em", textTransform: "uppercase", color: "#f97316", marginBottom: 10 }}>
-            Curated Selection
-          </p>
-          <h2 style={{ fontSize: 44, fontWeight: 700, color: "#0f172a", lineHeight: 1.1, margin: 0 }}>
-            Top{" "}
-            <span style={{ fontFamily: "'Instrument Serif', serif", fontStyle: "italic", color: "#059669" }}>
-              Selling
-            </span>
-          </h2>
-          <div style={{ width: 40, height: 2, background: "#10b981", margin: "14px auto 0" }} />
-          {!loading && totalSold > 0 && (
-            <p style={{ fontSize: 12, color: "#94a3b8", marginTop: 10 }}>
-              Based on {totalSold.toLocaleString()} orders
-            </p>
-          )}
-        </div>
-
-        {error ? (
-          <div style={{ textAlign: "center", color: "#94a3b8", padding: 40 }}>{error}</div>
-        ) : !loading && products.length === 0 ? (
-          <div style={{ textAlign: "center", color: "#94a3b8", padding: 40, fontSize: 14 }}>
-            No sales data yet — products will appear here once orders come in.
-          </div>
-        ) : (
-          <div style={{ display: "flex", gap: 14, maxWidth: 1360, margin: "0 auto", flexWrap: "wrap" }}>
-            <Panel products={left}  loading={loading} bgImage="/images/tsBg.jpg"  onShopClick={() => router.push("/shop")} />
-            <Panel products={right} loading={loading} bgImage="/images/tsBg1.png" onShopClick={() => router.push("/shop")} />
-          </div>
+      {/* Header */}
+      <div className="text-center mb-12">
+        <p className="text-[10px] tracking-[0.45em] uppercase text-orange-500 mb-2">Curated Selection</p>
+        <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-slate-900 leading-tight">
+          Top{" "}
+          <span className="italic text-emerald-600" style={{ fontFamily: "'Georgia', serif" }}>Selling</span>
+        </h2>
+        <div className="w-10 h-0.5 bg-emerald-500 mx-auto mt-3" />
+        {!loading && totalSold > 0 && (
+          <p className="text-xs text-slate-400 mt-3">Based on {totalSold.toLocaleString()} orders</p>
         )}
-      </section>
-    </>
+      </div>
+
+      {error ? (
+        <p className="text-center text-slate-400 py-10">{error}</p>
+      ) : !loading && products.length === 0 ? (
+        <p className="text-center text-slate-400 py-10 text-sm">
+          No sales data yet — products will appear here once orders come in.
+        </p>
+      ) : (
+        <div className="flex flex-col lg:flex-row gap-3 max-w-6xl mx-auto">
+          <Panel products={left}  loading={loading} bgImage="/images/tsBg.jpg"  onShopClick={() => router.push("/shop")} />
+          <Panel products={right} loading={loading} bgImage="/images/tsBg1.png" onShopClick={() => router.push("/shop")} />
+        </div>
+      )}
+    </section>
   );
 }

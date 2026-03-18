@@ -3,263 +3,150 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import axios from "axios";
-import Link from "next/link";
 import ShopkeeperSidebar from "@/components/shopkeeper/ShopkeeperSidebar";
 
-const css = `
-  @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500;600;700&display=swap');
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'DM Sans', sans-serif; background: #fafaf9; }
-  .fade-in { animation: fadeUp 0.4s ease both; }
-  @keyframes fadeUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
-  .nav-link:hover { color: #0f172a !important; }
-  .btn-primary:hover { background: #1e293b !important; }
-  .input:focus { outline: none; border-color: #0f172a !important; }
-  .save-btn:hover { background: #1e293b !important; }
-`;
-
 export default function ShopkeeperShopPage() {
-  const { user, loading, logout } = useAuth();
+  const { user, loading } = useAuth();
   const router = useRouter();
 
-  const [shop, setShop] = useState(null);
+  const [shop,     setShop]     = useState(null);
   const [fetching, setFetching] = useState(true);
-  const [editing, setEditing] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [success, setSuccess] = useState(false);
-  const [error, setError] = useState(null);
-  const [form, setForm] = useState({ shopName: "", shopDescription: "", phone: "" });
+  const [editing,  setEditing]  = useState(false);
+  const [saving,   setSaving]   = useState(false);
+  const [success,  setSuccess]  = useState(false);
+  const [error,    setError]    = useState(null);
+  const [form,     setForm]     = useState({ shopName: "", shopDescription: "", phone: "" });
 
   useEffect(() => {
-    if (!loading && (!user || !["shopkeeper", "admin"].includes(user.role))) {
-      router.replace("/login");
-    }
+    if (!loading && (!user || !["shopkeeper", "admin"].includes(user.role))) router.replace("/login");
   }, [user, loading]);
 
-  useEffect(() => {
-    if (user) fetchShop();
-  }, [user]);
+  useEffect(() => { if (user) fetchShop(); }, [user]);
 
   const fetchShop = async () => {
     try {
       const { data } = await axios.get("/api/shopkeeper/shop");
       setShop(data.shop);
-      setForm({
-        shopName: data.shop?.shopName || "",
-        shopDescription: data.shop?.shopDescription || "",
-        phone: data.shop?.phone || "",
-      });
-    } catch (e) {
-      console.error(e);
-      setError("Failed to load shop info.");
-    } finally {
-      setFetching(false);
-    }
+      setForm({ shopName: data.shop?.shopName || "", shopDescription: data.shop?.shopDescription || "", phone: data.shop?.phone || "" });
+    } catch { setError("Failed to load shop info."); }
+    finally { setFetching(false); }
   };
 
   const handleSave = async () => {
     if (!form.shopName) return setError("Shop name is required.");
-    setSaving(true);
-    setError(null);
+    setSaving(true); setError(null);
     try {
       const { data } = await axios.patch("/api/shopkeeper/shop", form);
-      setShop(data.shop);
-      setEditing(false);
-      setSuccess(true);
+      setShop(data.shop); setEditing(false); setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
-    } catch (e) {
-      setError(e?.response?.data?.error || "Failed to save.");
-    } finally {
-      setSaving(false);
-    }
+    } catch (e) { setError(e?.response?.data?.error || "Failed to save."); }
+    finally { setSaving(false); }
   };
 
   if (loading || !user) return <Loader />;
 
+  const inpCls = "w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg bg-slate-50 font-sans focus:outline-none focus:border-slate-900 transition-colors";
+  const lblCls = "block text-[11px] font-bold text-slate-400 uppercase tracking-wide mb-1.5";
+
   return (
-    <>
-      <style>{css}</style>
-      <ShopkeeperSidebar>
-        <div style={{ maxWidth: 720, margin: "0 auto", padding: "48px 40px" }}>
+    <ShopkeeperSidebar>
+      <div className="max-w-2xl mx-auto p-5 sm:p-8 md:p-10">
 
-          {/* Header */}
-          <div className="fade-in" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 36 }}>
-            <div>
-              <h1 style={{ fontFamily: "'Instrument Serif', serif", fontSize: 36, color: "#0f172a", fontWeight: 400 }}>My Shop</h1>
-              <p style={{ color: "#64748b", marginTop: 6, fontSize: 15 }}>View and update your shop profile.</p>
-            </div>
-            {!editing && !fetching && (
-              <button
-                onClick={() => { setEditing(true); setSuccess(false); }}
-                style={{
-                  background: "#0f172a", color: "#fff", border: "none",
-                  borderRadius: 8, padding: "10px 20px", fontSize: 13,
-                  fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
-                }}
-              >Edit Shop</button>
-            )}
+        {/* Header */}
+        <div className="flex flex-wrap justify-between items-start gap-3 mb-8">
+          <div>
+            <h1 className="text-3xl md:text-4xl text-slate-900 font-light" style={{ fontFamily: "Georgia, serif" }}>My Shop</h1>
+            <p className="text-slate-500 mt-1.5 text-sm">View and update your shop profile.</p>
           </div>
-
-          {/* Success banner */}
-          {success && (
-            <div className="fade-in" style={{
-              background: "#f0fdf4", border: "1px solid #bbf7d0",
-              borderRadius: 10, padding: "12px 16px", marginBottom: 20,
-              display: "flex", alignItems: "center", gap: 10, fontSize: 14, color: "#065f46",
-            }}>
-              <span>✓</span> Shop updated successfully!
-            </div>
-          )}
-
-          {/* Error */}
-          {error && (
-            <div style={{
-              background: "#fef2f2", color: "#dc2626",
-              padding: "12px 16px", borderRadius: 10, marginBottom: 20, fontSize: 14,
-            }}>{error}</div>
-          )}
-
-          {fetching ? (
-            <div style={{ padding: 60, textAlign: "center", color: "#94a3b8" }}>Loading...</div>
-          ) : (
-            <div className="fade-in" style={{
-              background: "#fff", border: "1px solid #e5e7eb",
-              borderRadius: 16, overflow: "hidden",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
-            }}>
-
-              {/* Shop Avatar / Banner */}
-              <div style={{
-                height: 100, background: "linear-gradient(135deg, #0f172a 0%, #334155 100%)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-              }}>
-                <div style={{
-                  width: 64, height: 64, borderRadius: "50%",
-                  background: "#fff", display: "flex", alignItems: "center",
-                  justifyContent: "center", fontSize: 28, border: "3px solid rgba(255,255,255,0.3)",
-                }}>🏪</div>
-              </div>
-
-              <div style={{ padding: 32 }}>
-
-                {editing ? (
-                  /* ── Edit Form ── */
-                  <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-                    {[
-                      { key: "shopName", label: "Shop Name *", placeholder: "Your shop name" },
-                      { key: "phone", label: "Phone", placeholder: "Contact number" },
-                    ].map((f) => (
-                      <div key={f.key}>
-                        <label style={{ fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: 0.5, display: "block", marginBottom: 6 }}>
-                          {f.label}
-                        </label>
-                        <input
-                          className="input"
-                          value={form[f.key]}
-                          onChange={(e) => setForm((prev) => ({ ...prev, [f.key]: e.target.value }))}
-                          placeholder={f.placeholder}
-                          style={{
-                            width: "100%", padding: "10px 12px", fontSize: 14,
-                            border: "1px solid #e5e7eb", borderRadius: 8,
-                            fontFamily: "inherit", background: "#fafaf9",
-                            transition: "border-color 0.15s",
-                          }}
-                        />
-                      </div>
-                    ))}
-                    <div>
-                      <label style={{ fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: 0.5, display: "block", marginBottom: 6 }}>
-                        Shop Description
-                      </label>
-                      <textarea
-                        className="input"
-                        value={form.shopDescription}
-                        onChange={(e) => setForm((prev) => ({ ...prev, shopDescription: e.target.value }))}
-                        placeholder="Tell customers about your shop..."
-                        rows={4}
-                        style={{
-                          width: "100%", padding: "10px 12px", fontSize: 14,
-                          border: "1px solid #e5e7eb", borderRadius: 8,
-                          fontFamily: "inherit", background: "#fafaf9", resize: "vertical",
-                        }}
-                      />
-                    </div>
-
-                    <div style={{ display: "flex", gap: 10 }}>
-                      <button
-                        onClick={handleSave}
-                        disabled={saving}
-                        className="save-btn"
-                        style={{
-                          background: "#0f172a", color: "#fff", border: "none",
-                          borderRadius: 8, padding: "10px 24px", fontSize: 13,
-                          fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
-                          opacity: saving ? 0.6 : 1, transition: "background 0.15s",
-                        }}
-                      >{saving ? "Saving…" : "Save Changes"}</button>
-                      <button
-                        onClick={() => { setEditing(false); setError(null); }}
-                        style={{
-                          background: "#f1f5f9", color: "#64748b", border: "none",
-                          borderRadius: 8, padding: "10px 20px", fontSize: 13,
-                          fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
-                        }}
-                      >Cancel</button>
-                    </div>
-                  </div>
-
-                ) : (
-                  /* ── View Mode ── */
-                  <div>
-                    <div style={{ marginBottom: 24 }}>
-                      <div style={{ fontFamily: "'Instrument Serif', serif", fontSize: 26, color: "#0f172a", fontWeight: 400 }}>
-                        {shop?.shopName || "—"}
-                      </div>
-                      <div style={{ fontSize: 13, color: "#64748b", marginTop: 4 }}>@{user.userName}</div>
-                    </div>
-
-                    {[
-                      { label: "Description", value: shop?.shopDescription || "No description added yet." },
-                      { label: "Email", value: shop?.email || user.email || "—" },
-                      { label: "Phone", value: shop?.phone || "—" },
-                      { label: "Status", value: shop?.status || "approved" },
-                      { label: "Member Since", value: shop?.createdAt ? new Date(shop.createdAt).toLocaleDateString("en-PK", { day: "numeric", month: "long", year: "numeric" }) : "—" },
-                    ].map((row) => (
-                      <div key={row.label} style={{
-                        padding: "14px 0",
-                        borderBottom: "1px solid #f8fafc",
-                        display: "flex", gap: 16,
-                      }}>
-                        <div style={{ width: 130, fontSize: 11, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: 0.5, paddingTop: 2, flexShrink: 0 }}>
-                          {row.label}
-                        </div>
-                        <div style={{ fontSize: 14, color: "#0f172a", lineHeight: 1.6, flex: 1 }}>
-                          {row.label === "Status" ? (
-                            <span style={{
-                              background: "#ecfdf5", color: "#059669",
-                              fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 99,
-                              textTransform: "capitalize",
-                            }}>{row.value}</span>
-                          ) : row.value}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
+          {!editing && !fetching && (
+            <button onClick={() => { setEditing(true); setSuccess(false); }}
+              className="bg-slate-900 hover:bg-slate-700 text-white border-none rounded-lg px-5 py-2.5 text-sm font-semibold cursor-pointer transition-colors">
+              Edit Shop
+            </button>
           )}
         </div>
-      </ShopkeeperSidebar>
-    </>
+
+        {success && (
+          <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-xl px-4 py-3 mb-4 text-sm text-green-800">
+            <span>✓</span> Shop updated successfully!
+          </div>
+        )}
+        {error && (
+          <div className="bg-red-50 text-red-600 px-4 py-3 rounded-xl mb-4 text-sm">{error}</div>
+        )}
+
+        {fetching ? (
+          <div className="text-center text-slate-400 py-16">Loading...</div>
+        ) : (
+          <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
+            {/* Banner */}
+            <div className="h-24 bg-linear-to-r from-slate-900 to-slate-600 flex items-center justify-center">
+              <div className="w-14 h-14 rounded-full bg-white flex items-center justify-center text-2xl border-[3px] border-white/30">🏪</div>
+            </div>
+
+            <div className="p-5 sm:p-8">
+              {editing ? (
+                <div className="flex flex-col gap-4">
+                  {[
+                    { key: "shopName", label: "Shop Name *", placeholder: "Your shop name", type: "input" },
+                    { key: "phone",    label: "Phone",        placeholder: "Contact number",  type: "input" },
+                  ].map((f) => (
+                    <div key={f.key}>
+                      <label className={lblCls}>{f.label}</label>
+                      <input value={form[f.key]} onChange={(e) => setForm((p) => ({ ...p, [f.key]: e.target.value }))} placeholder={f.placeholder} className={inpCls} />
+                    </div>
+                  ))}
+                  <div>
+                    <label className={lblCls}>Shop Description</label>
+                    <textarea value={form.shopDescription} onChange={(e) => setForm((p) => ({ ...p, shopDescription: e.target.value }))} placeholder="Tell customers about your shop..." rows={4} className={`${inpCls} resize-y`} />
+                  </div>
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    <button onClick={handleSave} disabled={saving}
+                      className="bg-slate-900 hover:bg-slate-700 text-white border-none rounded-lg px-6 py-2.5 text-sm font-semibold cursor-pointer transition-colors disabled:opacity-60">
+                      {saving ? "Saving…" : "Save Changes"}
+                    </button>
+                    <button onClick={() => { setEditing(false); setError(null); }}
+                      className="bg-slate-100 hover:bg-slate-200 text-slate-600 border-none rounded-lg px-5 py-2.5 text-sm font-semibold cursor-pointer transition-colors">
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <div className="mb-6">
+                    <div className="text-2xl text-slate-900 font-light" style={{ fontFamily: "Georgia, serif" }}>{shop?.shopName || "—"}</div>
+                    <div className="text-sm text-slate-400 mt-1">@{user.userName}</div>
+                  </div>
+                  {[
+                    { label: "Description",  value: shop?.shopDescription || "No description added yet." },
+                    { label: "Email",        value: shop?.email || user.email || "—" },
+                    { label: "Phone",        value: shop?.phone || "—" },
+                    { label: "Status",       value: shop?.status || "approved" },
+                    { label: "Member Since", value: shop?.createdAt ? new Date(shop.createdAt).toLocaleDateString("en-PK", { day: "numeric", month: "long", year: "numeric" }) : "—" },
+                  ].map((row) => (
+                    <div key={row.label} className="flex flex-col sm:flex-row gap-1 sm:gap-4 py-3 border-b border-slate-50 last:border-0">
+                      <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wide sm:w-32 shrink-0 pt-0.5">{row.label}</div>
+                      <div className="text-sm text-slate-900 leading-relaxed flex-1">
+                        {row.label === "Status" ? (
+                          <span className="bg-green-50 text-green-700 text-[11px] font-bold px-2.5 py-1 rounded-full capitalize">{row.value}</span>
+                        ) : row.value}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    </ShopkeeperSidebar>
   );
 }
 
 function Loader() {
   return (
-    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#fafaf9" }}>
-      <div style={{ width: 32, height: 32, border: "3px solid #e2e8f0", borderTopColor: "#0f172a", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <div className="w-8 h-8 border-[3px] border-slate-200 border-t-slate-900 rounded-full animate-spin" />
     </div>
   );
 }

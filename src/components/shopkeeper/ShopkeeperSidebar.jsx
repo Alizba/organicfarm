@@ -6,166 +6,139 @@ import { usePathname } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   LayoutDashboard, Package, BarChart2, Store,
-  LogOut, ChevronLeft, ChevronRight, ShoppingBag,
+  LogOut, ChevronLeft, ChevronRight, ShoppingBag, Menu, X, BookOpen,
 } from "lucide-react";
 
 const NAV_ITEMS = [
   { href: "/roles/shopkeeper",           icon: LayoutDashboard, label: "Dashboard" },
   { href: "/roles/shopkeeper/shop",      icon: Store,           label: "My Shop"   },
   { href: "/roles/shopkeeper/products",  icon: Package,         label: "Products"  },
-  { href: "/roles/shopkeeper/analytics", icon: BarChart2,        label: "Analytics" },
+  { href: "/roles/shopkeeper/analytics", icon: BarChart2,       label: "Analytics" },
+  { href: "/roles/shopkeeper/blog",      icon: BookOpen,        label: "Blog"      },
 ];
 
 export default function ShopkeeperLayout({ children }) {
-  const { user, logout } = useAuth();
+  const { user, logout }  = useAuth();
   const pathname          = usePathname();
   const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  const SidebarContent = ({ mobile = false }) => (
+    <div className="flex flex-col h-full">
+      {/* Logo */}
+      <div className={`flex items-center ${collapsed && !mobile ? "justify-center px-0 py-5" : "justify-between px-5 py-5"} border-b border-white/10 min-h-16`}>
+        {(!collapsed || mobile) && (
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center shrink-0">
+              <ShoppingBag size={16} color="#fff" />
+            </div>
+            <span className="text-[17px] text-slate-100 font-light" style={{ fontFamily: "Georgia, serif" }}>Shopkeeper</span>
+          </div>
+        )}
+        {collapsed && !mobile && (
+          <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center">
+            <ShoppingBag size={16} color="#fff" />
+          </div>
+        )}
+        {mobile && (
+          <button onClick={() => setMobileOpen(false)} className="text-white/40 hover:text-white/80 transition-colors">
+            <X size={20} />
+          </button>
+        )}
+      </div>
+
+      {/* Nav */}
+      <nav className="flex-1 p-2 flex flex-col gap-0.5 mt-1">
+        {NAV_ITEMS.map((item) => {
+          const Icon     = item.icon;
+          const isActive = pathname === item.href;
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              onClick={() => setMobileOpen(false)}
+              title={collapsed && !mobile ? item.label : undefined}
+              className={`flex items-center gap-3 rounded-xl text-[13px] transition-all duration-150
+                ${collapsed && !mobile ? "justify-center px-0 py-2.5" : "px-3 py-2.5"}
+                ${isActive
+                  ? "bg-emerald-500/15 text-emerald-400 font-semibold border-l-[3px] border-emerald-500"
+                  : "text-white/55 hover:bg-white/8 border-l-[3px] border-transparent hover:text-white/90"
+                }`}
+            >
+              <Icon size={18} strokeWidth={isActive ? 2.5 : 1.8} className="shrink-0" />
+              {(!collapsed || mobile) && <span>{item.label}</span>}
+            </Link>
+          );
+        })}
+      </nav>
+
+      {/* Footer */}
+      <div className="p-2 border-t border-white/8">
+        {(!collapsed || mobile) && (
+          <div className="px-3 py-2.5 mb-1 rounded-xl bg-white/4">
+            <div className="text-[12px] font-semibold text-slate-100">{user?.userName}</div>
+            <div className="text-[10px] font-bold text-emerald-400 uppercase tracking-wide mt-0.5">Shopkeeper</div>
+          </div>
+        )}
+        <button
+          onClick={logout}
+          className={`w-full flex items-center gap-3 rounded-xl text-[13px] text-white/40 hover:bg-red-500/10 hover:text-red-400 transition-all duration-150 border-none cursor-pointer bg-transparent
+            ${collapsed && !mobile ? "justify-center px-0 py-2.5" : "px-3 py-2.5"}`}
+        >
+          <LogOut size={16} className="shrink-0" />
+          {(!collapsed || mobile) && <span>Logout</span>}
+        </button>
+        {!mobile && (
+          <button
+            onClick={() => setCollapsed((v) => !v)}
+            className={`w-full flex items-center rounded-xl text-white/25 hover:bg-white/8 transition-all duration-150 border-none cursor-pointer bg-transparent py-2 mt-1
+              ${collapsed ? "justify-center px-0" : "justify-end px-3"}`}
+          >
+            {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+          </button>
+        )}
+      </div>
+    </div>
+  );
 
   return (
-    <>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500;600;700&display=swap');
-        .sk-layout * { box-sizing: border-box; }
-        .sk-layout { font-family: 'DM Sans', sans-serif; }
-        .sk-nav-item { transition: all 0.15s ease; }
-        .sk-nav-item:hover { background: rgba(255,255,255,0.08) !important; }
-        .sk-collapse-btn:hover { background: rgba(255,255,255,0.1) !important; }
-        .sk-logout:hover { background: rgba(239,68,68,0.12) !important; color: #f87171 !important; }
-        @keyframes sk-fadeup { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
-        .sk-fadein { animation: sk-fadeup 0.35s ease both; }
-      `}</style>
+    <div className="flex min-h-screen bg-slate-50">
 
-      <div className="sk-layout" style={{ display: "flex", minHeight: "100vh", background: "#f8fafc" }}>
+      {/* Desktop sidebar */}
+      <aside
+        className="hidden md:flex flex-col shrink-0 bg-slate-900 sticky top-0 h-screen overflow-hidden z-40 transition-all duration-250"
+        style={{ width: collapsed ? 68 : 240 }}
+      >
+        <SidebarContent />
+      </aside>
 
-        <aside style={{
-          width: collapsed ? 68 : 240,
-          background: "#0f172a",
-          display: "flex", flexDirection: "column",
-          position: "sticky", top: 0, height: "100vh",
-          flexShrink: 0,
-          transition: "width 0.25s cubic-bezier(.4,0,.2,1)",
-          overflow: "hidden",
-          zIndex: 40,
-        }}>
-
-          <div style={{
-            padding: collapsed ? "20px 0" : "20px 20px",
-            borderBottom: "1px solid rgba(255,255,255,0.07)",
-            display: "flex", alignItems: "center",
-            justifyContent: collapsed ? "center" : "space-between",
-            minHeight: 64,
-          }}>
-            {!collapsed && (
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <div style={{
-                  width: 30, height: 30, background: "#10b981",
-                  borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center",
-                }}>
-                  <ShoppingBag size={16} color="#fff" />
-                </div>
-                <span style={{ fontFamily: "'Instrument Serif', serif", fontSize: 17, color: "#f8fafc", fontWeight: 400 }}>
-                  Shopkeeper
-                </span>
-              </div>
-            )}
-            {collapsed && (
-              <div style={{ width: 30, height: 30, background: "#10b981", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <ShoppingBag size={16} color="#fff" />
-              </div>
-            )}
+      {/* Mobile top bar */}
+      <div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-slate-900 flex items-center justify-between px-4 h-14 border-b border-white/10">
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 bg-emerald-500 rounded-lg flex items-center justify-center">
+            <ShoppingBag size={14} color="#fff" />
           </div>
-
-          <nav style={{ flex: 1, padding: "12px 8px", display: "flex", flexDirection: "column", gap: 2 }}>
-            {NAV_ITEMS.map((item) => {
-              const Icon     = item.icon;
-              const isActive = pathname === item.href;
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="sk-nav-item"
-                  title={collapsed ? item.label : undefined}
-                  style={{
-                    display: "flex", alignItems: "center",
-                    gap: 12, padding: collapsed ? "10px 0" : "10px 12px",
-                    justifyContent: collapsed ? "center" : "flex-start",
-                    borderRadius: 9, textDecoration: "none",
-                    background: isActive ? "rgba(16,185,129,0.15)" : "transparent",
-                    color: isActive ? "#10b981" : "rgba(255,255,255,0.6)",
-                    fontWeight: isActive ? 600 : 400,
-                    fontSize: 13,
-                    borderLeft: isActive ? "3px solid #10b981" : "3px solid transparent",
-                    transition: "all 0.15s ease",
-                  }}
-                >
-                  <Icon size={18} strokeWidth={isActive ? 2.5 : 1.8} style={{ flexShrink: 0 }} />
-                  {!collapsed && <span>{item.label}</span>}
-                </Link>
-              );
-            })}
-          </nav>
-
-=          <div style={{
-            padding: "12px 8px",
-            borderTop: "1px solid rgba(255,255,255,0.07)",
-          }}>
-            {!collapsed && (
-              <div style={{
-                padding: "10px 12px", marginBottom: 4,
-                borderRadius: 9, background: "rgba(255,255,255,0.04)",
-              }}>
-                <div style={{ fontSize: 12, fontWeight: 600, color: "#f8fafc", marginBottom: 2 }}>
-                  {user?.userName}
-                </div>
-                <div style={{
-                  fontSize: 10, fontWeight: 700, color: "#10b981",
-                  textTransform: "uppercase", letterSpacing: 0.8,
-                }}>
-                  Shopkeeper
-                </div>
-              </div>
-            )}
-
-            <button
-              onClick={logout}
-              className="sk-nav-item sk-logout"
-              title={collapsed ? "Logout" : undefined}
-              style={{
-                width: "100%", display: "flex", alignItems: "center",
-                gap: 12, padding: collapsed ? "10px 0" : "10px 12px",
-                justifyContent: collapsed ? "center" : "flex-start",
-                borderRadius: 9, border: "none", cursor: "pointer",
-                background: "transparent", color: "rgba(255,255,255,0.4)",
-                fontSize: 13, fontFamily: "inherit",
-                transition: "all 0.15s ease",
-              }}
-            >
-              <LogOut size={16} style={{ flexShrink: 0 }} />
-              {!collapsed && <span>Logout</span>}
-            </button>
-
-            <button
-              onClick={() => setCollapsed((v) => !v)}
-              className="sk-collapse-btn"
-              style={{
-                width: "100%", display: "flex", alignItems: "center",
-                justifyContent: collapsed ? "center" : "flex-end",
-                padding: "8px 12px", marginTop: 4,
-                border: "none", cursor: "pointer", background: "transparent",
-                color: "rgba(255,255,255,0.25)", borderRadius: 9,
-                transition: "all 0.15s ease",
-              }}
-              title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-            >
-              {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
-            </button>
-          </div>
-        </aside>
-
-        <main style={{ flex: 1, minWidth: 0, overflowX: "hidden" }}>
-          {children}
-        </main>
+          <span className="text-slate-100 font-light text-base" style={{ fontFamily: "Georgia, serif" }}>Shopkeeper</span>
+        </div>
+        <button onClick={() => setMobileOpen(true)} className="text-white/60 hover:text-white transition-colors">
+          <Menu size={22} />
+        </button>
       </div>
-    </>
+
+      {/* Mobile drawer overlay */}
+      {mobileOpen && (
+        <div className="md:hidden fixed inset-0 z-50 flex">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setMobileOpen(false)} />
+          <div className="relative w-64 bg-slate-900 h-full flex flex-col z-10">
+            <SidebarContent mobile />
+          </div>
+        </div>
+      )}
+
+      {/* Main content */}
+      <main className="flex-1 min-w-0 overflow-x-hidden pt-14 md:pt-0">
+        {children}
+      </main>
+    </div>
   );
 }

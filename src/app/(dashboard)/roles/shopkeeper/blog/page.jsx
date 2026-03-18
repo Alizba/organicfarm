@@ -18,18 +18,17 @@ export default function ShopkeeperBlogPage() {
 
   return (
     <ShopkeeperSidebar>
-      <div style={{ padding: "28px 32px", fontFamily: "sans-serif" }}>
+      <div className="p-5 sm:p-8 md:p-10">
         {loading ? (
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <div className="flex flex-col gap-3">
             {[...Array(4)].map((_, i) => (
-              <div key={i} style={{ height: 80, background: "#e5e7eb", borderRadius: 12, animation: "pulse 1.5s infinite" }} />
+              <div key={i} className="h-20 bg-gray-200 rounded-xl animate-pulse" />
             ))}
           </div>
         ) : (
           <BlogManager apiBase="/api/shopkeeper/blog" posts={posts} setPosts={setPosts} reload={load} />
         )}
       </div>
-      <style>{`@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}`}</style>
     </ShopkeeperSidebar>
   );
 }
