@@ -7,16 +7,16 @@ const nextConfig = {
     remotePatterns: [],
   },
   // Increase body size limit so base64 images (up to 2MB) can be sent via API
-  experimental: {
-    serverActions: {
-      bodySizeLimit: "10mb",
-    },
-  },
-  api: {
-    bodyParser: {
-      sizeLimit: "4mb",
-    },
-  },
+  // experimental: {
+  //   serverActions: {
+  //     bodySizeLimit: "10mb",
+  //   },
+  // },
+  // api: {
+  //   bodyParser: {
+  //     sizeLimit: "4mb",
+  //   },
+  // },
   eslint:{
     ignoreDuringBuilds: true,
   }
